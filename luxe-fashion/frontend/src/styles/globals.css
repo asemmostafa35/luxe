@@ -1,0 +1,155 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500;600&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Jost", system-ui, sans-serif;
+  --font-mono: "Fira Code", monospace;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-white text-brand-900 dark:bg-brand-950 dark:text-brand-50;
+    font-family: var(--font-body);
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    @apply font-light tracking-wide;
+  }
+  ::selection {
+    @apply bg-brand-200 text-brand-900 dark:bg-brand-700 dark:text-brand-50;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+  input,
+  textarea,
+  select {
+    @apply bg-transparent;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-900 text-white px-8 py-3 text-sm tracking-widest uppercase font-medium transition-all duration-300 hover:bg-brand-700 active:scale-95 dark:bg-white dark:text-brand-900 dark:hover:bg-brand-100 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-outline {
+    @apply border border-brand-900 text-brand-900 px-8 py-3 text-sm tracking-widest uppercase font-medium transition-all duration-300 hover:bg-brand-900 hover:text-white dark:border-brand-100 dark:text-brand-100 dark:hover:bg-brand-100 dark:hover:text-brand-900;
+  }
+  .btn-ghost {
+    @apply text-brand-600 dark:text-brand-300 px-4 py-2 text-sm transition-colors hover:text-brand-900 dark:hover:text-white;
+  }
+  .input-field {
+    @apply w-full border-b border-brand-300 dark:border-brand-700 py-3 px-0 bg-transparent text-brand-900 dark:text-white placeholder:text-brand-400 focus:outline-none focus:border-brand-900 dark:focus:border-white transition-colors duration-200;
+  }
+
+  /* تم تعديل هذا الجزء */
+  .card-product {
+    @apply relative bg-white dark:bg-brand-900 overflow-hidden transition-all duration-500;
+  }
+
+  .product-img-wrap {
+    @apply relative overflow-hidden aspect-[3/4] bg-brand-50 dark:bg-brand-800;
+  }
+  /* تم ترك group-hover كما هو لأنه يعمل بشكل صحيح */
+  .product-img-wrap img {
+    @apply w-full h-full object-cover transition-transform duration-700 group-hover:scale-105;
+  }
+
+  .section-title {
+    @apply font-serif text-4xl md:text-5xl lg:text-6xl font-light text-brand-900 dark:text-white leading-tight;
+  }
+  .label-small {
+    @apply text-xs tracking-widest uppercase text-brand-500 dark:text-brand-400 font-medium;
+  }
+  .price {
+    @apply text-brand-900 dark:text-white font-medium;
+  }
+  .price-compare {
+    @apply text-brand-400 dark:text-brand-500 line-through text-sm;
+  }
+  .badge-new {
+    @apply absolute top-3 left-3 z-10 bg-brand-900 dark:bg-white text-white dark:text-brand-900 text-xs px-2 py-1 tracking-widest uppercase;
+  }
+  .badge-sale {
+    @apply absolute top-3 left-3 z-10 bg-red-600 text-white text-xs px-2 py-1 tracking-widest uppercase;
+  }
+  .skeleton {
+    @apply bg-brand-100 dark:bg-brand-800 animate-pulse;
+    background: linear-gradient(
+      90deg,
+      transparent 25%,
+      rgba(0, 0, 0, 0.04) 50%,
+      transparent 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+  .nav-link {
+    @apply text-sm tracking-widest uppercase text-brand-700 dark:text-brand-200 hover:text-brand-900 dark:hover:text-white transition-colors duration-200 relative after:absolute after:bottom-0 after:left-0 after:w-0 after:h-px after:bg-brand-900 dark:after:bg-white after:transition-all after:duration-300 hover:after:w-full;
+  }
+  .sidebar-filter {
+    @apply border-b border-brand-100 dark:border-brand-800 pb-6 mb-6;
+  }
+  .rating-star {
+    @apply text-gold-500 fill-gold-500;
+  }
+  .rating-star-empty {
+    @apply text-brand-200 dark:text-brand-700;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-brand-50 dark:bg-brand-900;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-brand-300 dark:bg-brand-700 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-brand-500 dark:bg-brand-500;
+}
+
+/* Swiper custom */
+.swiper-pagination-bullet-active {
+  @apply !bg-brand-900 dark:!bg-white;
+}
+.swiper-button-prev,
+.swiper-button-next {
+  @apply !text-brand-900 dark:!text-white;
+}
+
+/* Page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 400ms,
+    transform 400ms;
+}

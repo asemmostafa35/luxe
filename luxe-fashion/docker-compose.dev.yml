@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: luxe_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: luxe
+      POSTGRES_PASSWORD: luxepassword
+      POSTGRES_DB: luxe_fashion
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: builder
+    container_name: luxe_backend_dev
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      DATABASE_URL: postgresql://luxe:luxepassword@postgres:5432/luxe_fashion
+      FRONTEND_URL: http://localhost:3000
+      JWT_SECRET: dev-jwt-secret-change-in-production
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/prisma:/app/prisma
+      - uploads_dev:/app/uploads
+    command: npm run dev
+
+volumes:
+  postgres_dev_data:
+  uploads_dev:
