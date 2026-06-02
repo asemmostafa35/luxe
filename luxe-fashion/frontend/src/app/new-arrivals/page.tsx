@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import ShopClient from '@/app/shop/ShopClient';
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import ShopClient from "@/app/shop/ShopClient";
 
 export const metadata: Metadata = {
-  title: 'New Arrivals — Luxe Fashion',
-  description: 'Discover the latest additions to our collection.',
+  title: "New Arrivals — ZANE",
+  description: "Discover the latest additions to our collection.",
 };
 
 export default function NewArrivalsPage() {

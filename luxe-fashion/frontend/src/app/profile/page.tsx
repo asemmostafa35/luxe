@@ -17,6 +17,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatEGP } from "@/lib/currency";
+import { getDefaultAdminLanding } from "@/lib/rbac/permissions";
 
 const tabs = [
   { id: "orders", label: "Orders", icon: Package },
@@ -39,7 +41,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function ProfilePage() {
-  const { user, logout, loading, isAdmin } = useAuth();
+  const { user, logout, loading, isStaff } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState("orders");
 
@@ -83,9 +85,9 @@ export default function ProfilePage() {
               </button>
             ))}
 
-            {isAdmin && (
+            {isStaff && (
               <Link
-                href="/admin"
+                href={user ? getDefaultAdminLanding(user.role) : "/admin"}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm text-brand-900 font-bold hover:bg-brand-100 dark:text-white dark:hover:bg-brand-800 transition-colors"
               >
                 <ShieldCheck size={16} /> Admin Dashboard
@@ -174,7 +176,7 @@ function OrdersTab() {
                   {order.status}
                 </span>
                 <p className="text-sm font-medium text-brand-900 dark:text-white mt-2">
-                  ${Number(order.total).toFixed(2)}
+                  {formatEGP(Number(order.total))}
                 </p>
               </div>
             </div>
@@ -275,7 +277,7 @@ function WishlistTab() {
                 {item.product.name}
               </p>
               <p className="text-sm text-brand-600 dark:text-brand-400">
-                ${Number(item.product.price).toFixed(2)}
+                {formatEGP(Number(item.product.price))}
               </p>
             </Link>
             <button

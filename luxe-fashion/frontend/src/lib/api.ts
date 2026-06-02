@@ -67,8 +67,11 @@ export const productsApi = {
 // Categories
 export const categoriesApi = {
   getAll: () => api.get('/categories'),
+  getAllAdmin: () => api.get('/categories/manage'),
   create: (data: any) => api.post('/categories', data),
   update: (id: string, data: any) => api.put(`/categories/${id}`, data),
+  setActive: (id: string, isActive: boolean) =>
+    api.put(`/categories/${id}`, { isActive }),
   delete: (id: string) => api.delete(`/categories/${id}`),
 };
 
@@ -131,6 +134,13 @@ export const adminApi = {
   updateStock: (variantId: string, stock: number) => api.patch(`/admin/inventory/${variantId}`, { stock }),
   getAnnouncements: () => api.get('/admin/announcements'),
   createAnnouncement: (data: any) => api.post('/admin/announcements', data),
+  updateAnnouncement: (id: string, data: any) => api.patch(`/admin/announcements/${id}`, data),
+  getSettings: () => api.get('/admin/settings'),
+  updateSettings: (data: any) => api.patch('/admin/settings', data),
+};
+
+export const storeSettingsApi = {
+  getPublic: () => api.get('/settings/store'),
 };
 
 // Banners

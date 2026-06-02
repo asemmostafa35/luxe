@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Check, Tag, X } from 'lucide-react';
+import { formatEGP } from '@/lib/currency';
 
 const checkoutSchema = z.object({
   firstName: z.string().min(1, 'Required'),
@@ -22,7 +23,7 @@ const checkoutSchema = z.object({
   state: z.string().min(1, 'Required'),
   country: z.string().min(1, 'Required'),
   postalCode: z.string().min(1, 'Required'),
-  paymentMethod: z.enum(['CASH_ON_DELIVERY', 'CREDIT_CARD', 'STRIPE', 'PAYPAL']),
+  paymentMethod: z.literal('CASH_ON_DELIVERY'),
   notes: z.string().optional(),
 });
 
@@ -53,8 +54,8 @@ export default function CheckoutPage() {
       ? Math.min(sub * Number(coupon.discountValue) / 100, coupon.maxDiscount ? Number(coupon.maxDiscount) : Infinity)
       : Number(coupon.discountValue)
     : 0;
-  const shipping = sub >= 100 ? 0 : 9.99;
-  const tax = (sub - discountAmt) * 0.08;
+  const shipping = 100;
+  const tax = 0;
   const total = sub - discountAmt + shipping + tax;
 
   const applyCoupon = async () => {
@@ -77,7 +78,7 @@ export default function CheckoutPage() {
         guestName: !user ? `${form.firstName} ${form.lastName}` : undefined,
         guestPhone: !user ? form.phone : undefined,
 
-        paymentMethod: form.paymentMethod,
+        paymentMethod: 'CASH_ON_DELIVERY',
         couponCode: coupon?.code,
         notes: form.notes,
       });
@@ -190,10 +191,7 @@ export default function CheckoutPage() {
                 <h2 className="font-serif text-xl font-light text-brand-900 dark:text-white">Payment Method</h2>
                 <div className="space-y-3">
                   {[
-                    { value: 'CASH_ON_DELIVERY', label: 'Cash on Delivery', desc: 'Pay when your order arrives' },
-                    { value: 'CREDIT_CARD', label: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex' },
-                    { value: 'STRIPE', label: 'Stripe', desc: 'Secure payment via Stripe' },
-                    { value: 'PAYPAL', label: 'PayPal', desc: 'Pay with your PayPal account' },
+                    { value: 'CASH_ON_DELIVERY', label: 'Cash on Delivery', desc: 'Pay in cash when your order arrives' },
                   ].map(opt => (
                     <label key={opt.value} className="flex items-center gap-4 p-4 border border-brand-200 dark:border-brand-700 cursor-pointer hover:border-brand-900 dark:hover:border-white transition-colors">
                       <input {...register('paymentMethod')} type="radio" value={opt.value} className="w-4 h-4 accent-brand-900 dark:accent-white" />
@@ -226,7 +224,7 @@ export default function CheckoutPage() {
                         {(item.size || item.color) && <p className="text-xs text-brand-500">{[item.size, item.color].filter(Boolean).join(' · ')}</p>}
                         <p className="text-xs text-brand-500 mt-1">Qty: {item.quantity}</p>
                       </div>
-                      <p className="text-sm font-medium text-brand-900 dark:text-white">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="text-sm font-medium text-brand-900 dark:text-white">{formatEGP(item.price * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
@@ -248,7 +246,7 @@ export default function CheckoutPage() {
                 {items.map(item => (
                   <div key={`${item.productId}-${item.variantId}`} className="flex justify-between text-brand-600 dark:text-brand-400">
                     <span className="truncate mr-2">{item.name} <span className="text-brand-400">×{item.quantity}</span></span>
-                    <span className="flex-shrink-0">${(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="flex-shrink-0">{formatEGP(item.price * item.quantity)}</span>
                   </div>
                 ))}
               </div>
@@ -284,21 +282,21 @@ export default function CheckoutPage() {
               {/* Totals */}
               <div className="space-y-2 text-sm border-t border-brand-100 dark:border-brand-800 pt-4">
                 <div className="flex justify-between text-brand-600 dark:text-brand-400">
-                  <span>Subtotal</span><span>${sub.toFixed(2)}</span>
+                  <span>Subtotal</span><span>{formatEGP(sub)}</span>
                 </div>
                 {discountAmt > 0 && (
                   <div className="flex justify-between text-green-600 dark:text-green-400">
-                    <span>Discount</span><span>-${discountAmt.toFixed(2)}</span>
+                    <span>Discount</span><span>-{formatEGP(discountAmt)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-brand-600 dark:text-brand-400">
-                  <span>Shipping</span><span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                  <span>Shipping</span><span>{formatEGP(shipping)}</span>
                 </div>
                 <div className="flex justify-between text-brand-600 dark:text-brand-400">
-                  <span>Tax (8%)</span><span>${tax.toFixed(2)}</span>
+                  <span>Tax</span><span>{formatEGP(tax)}</span>
                 </div>
                 <div className="flex justify-between font-medium text-brand-900 dark:text-white text-base border-t border-brand-100 dark:border-brand-800 pt-2 mt-2">
-                  <span>Total</span><span>${total.toFixed(2)}</span>
+                  <span>Total</span><span>{formatEGP(total)}</span>
                 </div>
               </div>
             </div>

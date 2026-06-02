@@ -4,11 +4,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/lib/api';
 import { AdminPageHeader, DataTable, StatusBadge, Pagination, Modal, SearchInput } from '@/components/admin/AdminUI';
 import { Eye, Truck } from 'lucide-react';
+import { AdminTableThumb } from '@/components/admin/AdminTableThumb';
 import toast from 'react-hot-toast';
+import { formatEGP } from '@/lib/currency';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 const ORDER_STATUSES = ['PENDING','CONFIRMED','PROCESSING','SHIPPED','DELIVERED','CANCELLED','REFUNDED'];
 
 export default function AdminOrdersPage() {
+  const { hasPermission } = useAuth();
+  const canWriteOrders = hasPermission('orders:write');
   const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -38,22 +43,30 @@ export default function AdminOrdersPage() {
   const pagination = data?.data?.pagination;
 
   const columns = [
+    {
+      key: 'thumb',
+      label: '',
+      className: 'w-14 admin-table-cell',
+      render: (r: any) => (
+        <AdminTableThumb items={r.items} alt={r.items?.[0]?.name} />
+      ),
+    },
     { key: 'orderNumber', label: 'Order #', render: (r: any) => (
-      <span className="font-mono text-xs font-medium text-brand-900 dark:text-white">{r.orderNumber}</span>
+      <span className="font-mono text-xs font-medium" style={{ color: 'var(--admin-fg)' }}>{r.orderNumber}</span>
     )},
     { key: 'customer', label: 'Customer', render: (r: any) => (
       <div>
-        <p className="text-sm text-brand-900 dark:text-white">
+        <p className="text-sm" style={{ color: 'var(--admin-fg)' }}>
           {r.user ? `${r.user.firstName} ${r.user.lastName}` : r.guestName || '—'}
         </p>
-        <p className="text-xs text-brand-500">{r.user?.email || r.guestEmail}</p>
+        <p className="text-xs admin-muted">{r.user?.email || r.guestEmail}</p>
       </div>
     )},
     { key: 'items', label: 'Items', render: (r: any) => (
       <span>{r.items?.length || 0} item{r.items?.length !== 1 ? 's' : ''}</span>
     )},
     { key: 'total', label: 'Total', render: (r: any) => (
-      <span className="font-medium text-brand-900 dark:text-white">${Number(r.total).toFixed(2)}</span>
+      <span className="font-medium" style={{ color: 'var(--admin-fg)' }}>{formatEGP(Number(r.total))}</span>
     )},
     { key: 'paymentMethod', label: 'Payment', render: (r: any) => (
       <span className="text-xs">{r.paymentMethod?.replace(/_/g, ' ')}</span>
@@ -62,16 +75,26 @@ export default function AdminOrdersPage() {
     { key: 'createdAt', label: 'Date', render: (r: any) => (
       <span>{new Date(r.createdAt).toLocaleDateString()}</span>
     )},
-    { key: 'actions', label: '', render: (r: any) => (
-      <div className="flex gap-2">
-        <button onClick={() => { setSelectedOrder(r); setStatusForm({ status: r.status, note: '', trackingNumber: r.trackingNumber || '', shippingCarrier: r.shippingCarrier || '' }); }}
-          className="p-1.5 text-brand-400 hover:text-brand-900 dark:hover:text-white transition-colors">
-          <Eye size={14} />
+    { key: 'actions', label: '', className: 'w-24', render: (r: any) => (
+      <div className="flex items-center gap-1.5 justify-end">
+        <button
+          type="button"
+          title="View order"
+          onClick={() => { setSelectedOrder(r); setUpdatingStatus(false); setStatusForm({ status: r.status, note: '', trackingNumber: r.trackingNumber || '', shippingCarrier: r.shippingCarrier || '' }); }}
+          className="admin-icon-btn"
+        >
+          <Eye size={14} strokeWidth={1.5} />
         </button>
-        <button onClick={() => { setSelectedOrder(r); setUpdatingStatus(true); setStatusForm({ status: r.status, note: '', trackingNumber: r.trackingNumber || '', shippingCarrier: r.shippingCarrier || '' }); }}
-          className="p-1.5 text-brand-400 hover:text-brand-900 dark:hover:text-white transition-colors">
-          <Truck size={14} />
+        {canWriteOrders && (
+        <button
+          type="button"
+          title="Update status"
+          onClick={() => { setSelectedOrder(r); setUpdatingStatus(true); setStatusForm({ status: r.status, note: '', trackingNumber: r.trackingNumber || '', shippingCarrier: r.shippingCarrier || '' }); }}
+          className="admin-icon-btn"
+        >
+          <Truck size={14} strokeWidth={1.5} />
         </button>
+        )}
       </div>
     )},
   ];
@@ -84,7 +107,7 @@ export default function AdminOrdersPage() {
       <div className="flex flex-wrap gap-3 mb-5">
         <SearchInput value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Search by order # or email..." />
         <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-          className="border border-brand-200 dark:border-brand-700 px-3 py-2 text-sm bg-white dark:bg-brand-950 text-brand-700 dark:text-brand-300 focus:outline-none focus:border-brand-900 dark:focus:border-white">
+          className="admin-input w-auto text-sm py-2">
           <option value="">All Statuses</option>
           {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
@@ -101,36 +124,34 @@ export default function AdminOrdersPage() {
           <div className="space-y-5">
             {/* Order info */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-              <div><p className="text-brand-500 text-xs mb-1">Customer</p>
-                <p className="text-brand-900 dark:text-white font-medium">
+              <div><p className="admin-muted text-xs mb-1 uppercase tracking-wider">Customer</p>
+                <p className="font-medium" style={{ color: 'var(--admin-fg)' }}>
                   {selectedOrder.user ? `${selectedOrder.user.firstName} ${selectedOrder.user.lastName}` : selectedOrder.guestName}
                 </p>
-                <p className="text-brand-500 text-xs">{selectedOrder.user?.email || selectedOrder.guestEmail}</p>
+                <p className="admin-muted text-xs">{selectedOrder.user?.email || selectedOrder.guestEmail}</p>
               </div>
-              <div><p className="text-brand-500 text-xs mb-1">Total</p>
-                <p className="text-brand-900 dark:text-white font-medium text-lg">${Number(selectedOrder.total).toFixed(2)}</p>
+              <div><p className="admin-muted text-xs mb-1 uppercase tracking-wider">Total</p>
+                <p className="font-medium text-lg" style={{ color: 'var(--admin-fg)' }}>{formatEGP(Number(selectedOrder.total))}</p>
               </div>
-              <div><p className="text-brand-500 text-xs mb-1">Payment</p>
-                <p className="text-brand-900 dark:text-white">{selectedOrder.paymentMethod?.replace(/_/g,' ')}</p>
+              <div><p className="admin-muted text-xs mb-1 uppercase tracking-wider">Payment</p>
+                <p style={{ color: 'var(--admin-fg)' }}>{selectedOrder.paymentMethod?.replace(/_/g,' ')}</p>
                 <StatusBadge status={selectedOrder.paymentStatus || 'PENDING'} />
               </div>
             </div>
 
             {/* Items */}
             <div>
-              <p className="text-xs tracking-widest uppercase text-brand-500 mb-3">Items</p>
+              <p className="text-xs tracking-widest uppercase admin-muted mb-3">Items</p>
               <div className="space-y-2">
                 {selectedOrder.items?.map((item: any) => (
-                  <div key={item.id} className="flex items-center gap-3 py-2 border-b border-brand-50 dark:border-brand-900">
-                    <div className="w-10 h-12 bg-brand-100 dark:bg-brand-800 flex-shrink-0 overflow-hidden">
-                      {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
-                    </div>
+                  <div key={item.id} className="flex items-center gap-3 py-2 border-b" style={{ borderColor: 'var(--admin-border)' }}>
+                    <AdminTableThumb items={[{ image: item.image, name: item.name }]} alt={item.name} />
                     <div className="flex-1">
-                      <p className="text-sm text-brand-900 dark:text-white">{item.name}</p>
-                      {(item.size || item.color) && <p className="text-xs text-brand-500">{[item.size, item.color].filter(Boolean).join(' · ')}</p>}
+                      <p className="text-sm" style={{ color: 'var(--admin-fg)' }}>{item.name}</p>
+                      {(item.size || item.color) && <p className="text-xs admin-muted">{[item.size, item.color].filter(Boolean).join(' · ')}</p>}
                     </div>
-                    <p className="text-sm text-brand-500">×{item.quantity}</p>
-                    <p className="text-sm font-medium text-brand-900 dark:text-white">${Number(item.total).toFixed(2)}</p>
+                    <p className="text-sm admin-muted">×{item.quantity}</p>
+                    <p className="text-sm font-medium" style={{ color: 'var(--admin-fg)' }}>{formatEGP(Number(item.total))}</p>
                   </div>
                 ))}
               </div>
@@ -139,8 +160,8 @@ export default function AdminOrdersPage() {
             {/* Shipping address */}
             {selectedOrder.address && (
               <div>
-                <p className="text-xs tracking-widest uppercase text-brand-500 mb-2">Ship To</p>
-                <p className="text-sm text-brand-700 dark:text-brand-300">
+                <p className="text-xs tracking-widest uppercase admin-muted mb-2">Ship To</p>
+                <p className="text-sm" style={{ color: 'var(--admin-fg)' }}>
                   {selectedOrder.address.firstName} {selectedOrder.address.lastName}<br />
                   {selectedOrder.address.street}<br />
                   {selectedOrder.address.city}, {selectedOrder.address.state} {selectedOrder.address.postalCode}<br />
@@ -149,33 +170,34 @@ export default function AdminOrdersPage() {
               </div>
             )}
 
-            {/* Status update form */}
-            <div className="border-t border-brand-100 dark:border-brand-800 pt-4">
-              <p className="text-xs tracking-widest uppercase text-brand-500 mb-3">Update Status</p>
+            {canWriteOrders && (
+            <div className="border-t pt-4" style={{ borderColor: 'var(--admin-border)' }}>
+              <p className="text-xs tracking-widest uppercase admin-muted mb-3">Update Status</p>
               <div className="space-y-3">
                 <select value={statusForm.status} onChange={e => setStatusForm(p => ({ ...p, status: e.target.value }))}
-                  className="w-full border border-brand-200 dark:border-brand-700 px-3 py-2 text-sm bg-white dark:bg-brand-950 focus:outline-none focus:border-brand-900 dark:focus:border-white">
+                  className="admin-input text-sm">
                   {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
                 {statusForm.status === 'SHIPPED' && (
                   <div className="grid grid-cols-2 gap-3">
                     <input value={statusForm.trackingNumber} onChange={e => setStatusForm(p => ({ ...p, trackingNumber: e.target.value }))}
-                      placeholder="Tracking Number" className="border border-brand-200 dark:border-brand-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:border-brand-900 dark:focus:border-white" />
+                      placeholder="Tracking Number" className="admin-input text-sm" />
                     <input value={statusForm.shippingCarrier} onChange={e => setStatusForm(p => ({ ...p, shippingCarrier: e.target.value }))}
-                      placeholder="Carrier (e.g. FedEx)" className="border border-brand-200 dark:border-brand-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:border-brand-900 dark:focus:border-white" />
+                      placeholder="Carrier (e.g. FedEx)" className="admin-input text-sm" />
                   </div>
                 )}
                 <textarea value={statusForm.note} onChange={e => setStatusForm(p => ({ ...p, note: e.target.value }))}
                   placeholder="Note (optional)..." rows={2}
-                  className="w-full border border-brand-200 dark:border-brand-700 px-3 py-2 text-sm bg-transparent focus:outline-none focus:border-brand-900 dark:focus:border-white resize-none" />
+                  className="admin-input text-sm resize-none" />
                 <button
                   onClick={() => updateMutation.mutate({ id: selectedOrder.id, data: statusForm })}
                   disabled={updateMutation.isPending}
-                  className="btn-primary text-xs w-full sm:w-auto">
+                  className="admin-btn-primary text-xs w-full sm:w-auto">
                   {updateMutation.isPending ? 'Updating...' : 'Update Status'}
                 </button>
               </div>
             </div>
+            )}
           </div>
         )}
       </Modal>

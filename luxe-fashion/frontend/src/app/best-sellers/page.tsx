@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import ShopClient from '@/app/shop/ShopClient';
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import ShopClient from "@/app/shop/ShopClient";
 
 export const metadata: Metadata = {
-  title: 'Best Sellers — Luxe Fashion',
-  description: 'Our most-loved pieces, chosen by the community.',
+  title: "Best Sellers — ZANE",
+  description: "Our most-loved pieces, chosen by the community.",
 };
 
 export default function BestSellersPage() {

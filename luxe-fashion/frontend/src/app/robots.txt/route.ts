@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export async function GET() {
-  const BASE = process.env.NEXT_PUBLIC_APP_URL || 'https://luxefashion.com';
+  const BASE = process.env.NEXT_PUBLIC_APP_URL || "https://zanefashion.com";
   const text = `User-agent: *
 Allow: /
 
@@ -14,6 +14,9 @@ Disallow: /auth/
 Sitemap: ${BASE}/sitemap.xml
 `;
   return new NextResponse(text, {
-    headers: { 'Content-Type': 'text/plain', 'Cache-Control': 'public, max-age=86400' },
+    headers: {
+      "Content-Type": "text/plain",
+      "Cache-Control": "public, max-age=86400",
+    },
   });
 }

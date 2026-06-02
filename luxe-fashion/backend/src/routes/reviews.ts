@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../server';
-import { authenticate, requireAdmin } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
+import { requirePermission, requireStaff } from '../middleware/rbac';
 const router = Router();
 router.get('/product/:productId', async (req, res, next) => {
   try {
@@ -16,13 +17,13 @@ router.post('/', authenticate, async (req: any, res, next) => {
     res.status(201).json(review);
   } catch(e) { next(e); }
 });
-router.patch('/:id/approve', authenticate, requireAdmin, async (req, res, next) => {
+router.patch('/:id/approve', authenticate, requireStaff, requirePermission('reviews:write'), async (req, res, next) => {
   try {
     const review = await prisma.review.update({ where: { id: req.params.id }, data: { isApproved: true } });
     res.json(review);
   } catch(e) { next(e); }
 });
-router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
+router.delete('/:id', authenticate, requireStaff, requirePermission('reviews:write'), async (req, res, next) => {
   try {
     await prisma.review.delete({ where: { id: req.params.id } });
     res.json({ message: 'Deleted' });

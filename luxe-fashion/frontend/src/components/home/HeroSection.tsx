@@ -65,8 +65,11 @@ export default function HeroSection() {
 
       {/* Decorative panel */}
       <div className="absolute right-0 top-0 bottom-0 w-1/3 hidden lg:flex items-center justify-center bg-gradient-to-br from-brand-200 to-brand-300 dark:from-brand-700 dark:to-brand-800">
-        <div className="text-[160px] font-serif font-light text-brand-300/40 dark:text-brand-600/30 select-none leading-none">
-          L
+        <div
+          className="text-[160px] font-serif font-light text-brand-300/40 dark:text-brand-600/30 select-none leading-none"
+          aria-hidden="true"
+        >
+          Z
         </div>
       </div>
     </section>

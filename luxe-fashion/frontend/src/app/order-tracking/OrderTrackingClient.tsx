@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ordersApi } from '@/lib/api';
 import { Package, Truck, Check, Clock, X, MapPin } from 'lucide-react';
+import { formatEGP } from '@/lib/currency';
 
 const STATUS_STEPS = ['PENDING','CONFIRMED','PROCESSING','SHIPPED','DELIVERED'];
 
@@ -103,7 +104,7 @@ export default function OrderTrackingClient() {
               </div>
               <div className="text-right">
                 <p className="label-small text-brand-500 mb-1">Order Total</p>
-                <p className="font-medium text-brand-900 dark:text-white text-lg">${Number(order.total).toFixed(2)}</p>
+                <p className="font-medium text-brand-900 dark:text-white text-lg">{formatEGP(Number(order.total))}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
@@ -207,7 +208,7 @@ export default function OrderTrackingClient() {
                     )}
                   </p>
                   <p className="text-sm text-brand-500">×{item.quantity}</p>
-                  <p className="text-sm font-medium text-brand-900 dark:text-white">${Number(item.total).toFixed(2)}</p>
+                  <p className="text-sm font-medium text-brand-900 dark:text-white">{formatEGP(Number(item.total))}</p>
                 </div>
               ))}
             </div>

@@ -7,6 +7,7 @@ import { ShoppingBag, Heart, User, Search, Menu, X, Sun, Moon, ChevronDown } fro
 import { useCartStore, useWishlistStore, useUIStore } from '@/store';
 import SearchOverlay from './SearchOverlay';
 import MobileMenu from './MobileMenu';
+import Logo from './Logo';
 
 const navLinks = [
   { label: 'Shop', href: '/shop', children: [
@@ -21,14 +22,19 @@ const navLinks = [
 ];
 
 export default function Navbar() {
+  const [mounted, setMounted] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const { theme, setTheme } = useTheme();
-  const cartCount = useCartStore(s => s.count());
-  const wishlistCount = useWishlistStore(s => s.items.length);
+  const cartCount = useCartStore((s) => s.count());
+  const wishlistCount = useWishlistStore((s) => s.items.length);
   const { toggleSearch, searchOpen } = useUIStore();
   const dropdownTimer = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -55,8 +61,8 @@ export default function Navbar() {
         <nav className="max-w-screen-2xl mx-auto px-4 md:px-8">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="font-serif text-2xl md:text-3xl font-light tracking-[0.2em] uppercase text-brand-900 dark:text-white hover:opacity-70 transition-opacity">
-              Luxe
+            <Link href="/" className="hover:opacity-70 transition-opacity">
+              <Logo />
             </Link>
 
             {/* Desktop Nav */}
@@ -105,7 +111,7 @@ export default function Navbar() {
 
               <Link href="/profile/wishlist" className="relative p-2 text-brand-700 dark:text-brand-200 hover:text-brand-900 dark:hover:text-white transition-colors">
                 <Heart size={20} />
-                {wishlistCount > 0 && (
+                {mounted && wishlistCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-brand-900 dark:bg-white text-white dark:text-brand-900 text-[10px] rounded-full flex items-center justify-center font-medium">
                     {wishlistCount > 9 ? '9+' : wishlistCount}
                   </span>
@@ -122,7 +128,7 @@ export default function Navbar() {
                 aria-label="Shopping bag"
               >
                 <ShoppingBag size={20} />
-                {cartCount > 0 && (
+                {mounted && cartCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-brand-900 dark:bg-white text-white dark:text-brand-900 text-[10px] rounded-full flex items-center justify-center font-medium animate-scale-in">
                     {cartCount > 9 ? '9+' : cartCount}
                   </span>
@@ -134,7 +140,7 @@ export default function Navbar() {
                 className="p-2 text-brand-700 dark:text-brand-200 hover:text-brand-900 dark:hover:text-white transition-colors hidden md:block"
                 aria-label="Toggle theme"
               >
-                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                {mounted && theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
               <button

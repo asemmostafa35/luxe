@@ -19,11 +19,11 @@
  */
 
 import request from "supertest";
-import app from "../../server";
-import { prisma } from "../../server";
+import app from "../src/server";
+import { prisma } from "../src/server";
 
 // ── Mock email so tests don't need real SMTP ──────────────────────────────────
-jest.mock("../../services/emailService", () => ({
+jest.mock("../src/services/emailService", () => ({
   emailService: {
     sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
     sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),

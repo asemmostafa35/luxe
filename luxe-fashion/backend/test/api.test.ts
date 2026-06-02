@@ -8,11 +8,11 @@
  */
 
 import request from "supertest";
-import app from "../../server";
-import { prisma } from "../../server";
+import app from "../src/server";
+import { prisma } from "../src/server";
 
 // ── Mock email service to avoid real SMTP calls in tests ─────────────────────
-jest.mock("../../services/emailService", () => ({
+jest.mock("../src/services/emailService", () => ({
   emailService: {
     sendVerificationEmail: jest.fn().mockResolvedValue(undefined),
     sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
@@ -23,7 +23,7 @@ jest.mock("../../services/emailService", () => ({
   verifySmtpConnection: jest.fn().mockResolvedValue(undefined),
 }));
 
-import { emailService } from "../../services/emailService";
+import { emailService } from "../src/services/emailService";
 
 // ── Test user credentials ────────────────────────────────────────────────────
 const TEST_USER = {

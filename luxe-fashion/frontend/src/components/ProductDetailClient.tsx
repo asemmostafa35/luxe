@@ -19,6 +19,7 @@ import { useCartStore, useWishlistStore } from "@/store";
 import ProductCard from "@/components/shop/ProductCard";
 import toast from "react-hot-toast";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { formatEGP } from "@/lib/currency";
 
 export default function ProductDetailClient({ slug }: { slug: string }) {
   const { user } = useAuth();
@@ -317,11 +318,11 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
 
             <div className="flex items-center gap-4">
               <span className="font-serif text-3xl font-light text-brand-900 dark:text-white">
-                ${price.toFixed(2)}
+                {formatEGP(price)}
               </span>
               {comparePrice && (
                 <span className="text-lg text-brand-400 line-through">
-                  ${comparePrice.toFixed(2)}
+                  {formatEGP(comparePrice)}
                 </span>
               )}
               {discount > 0 && (
@@ -520,7 +521,7 @@ export default function ProductDetailClient({ slug }: { slug: string }) {
               "shipping",
               "Shipping & Returns",
               <div className="space-y-1">
-                <p>Free shipping on orders over $100</p>
+                <p>Flat shipping fee: 100 EGP</p>
                 <p>Standard delivery 3–5 business days</p>
                 <p>Express delivery available at checkout</p>
                 <p>Free returns within 30 days</p>

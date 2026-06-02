@@ -17,7 +17,7 @@ const mockFindMany = jest.fn();
 const mockFindUnique = jest.fn();
 const mockCount = jest.fn();
 
-jest.mock("../server", () => ({
+jest.mock("../src/server", () => ({
   prisma: {
     product: {
       create: (...args: any[]) => mockCreate(...args),
@@ -35,7 +35,7 @@ import {
   updateProduct,
   getProducts,
   deleteProduct,
-} from "../controllers/productController";
+} from "../src/controllers/productController";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -259,7 +259,7 @@ describe("createProduct", () => {
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe("updateProduct", () => {
-  it("updates scalar fields and does NOT pass images/variants to Prisma", async () => {
+  it("updates scalar fields and rewrites images/variants using nested writes", async () => {
     const body = {
       name: "Updated Dress",
       price: "250",
@@ -283,9 +283,11 @@ describe("updateProduct", () => {
     expect(mockUpdate).toHaveBeenCalledTimes(1);
     const updateData = mockUpdate.mock.calls[0][0].data;
 
-    // ✅ images and variants must NOT appear in update data at all
-    expect(updateData).not.toHaveProperty("images");
-    expect(updateData).not.toHaveProperty("variants");
+    // Images and variants should be persisted via Prisma nested writes
+    expect(updateData).toHaveProperty("images.create");
+    expect(updateData).toHaveProperty("images.deleteMany");
+    expect(updateData).toHaveProperty("variants.create");
+    expect(updateData).toHaveProperty("variants.deleteMany");
 
     // Scalar fields must be present
     expect(updateData).toHaveProperty("name", "Updated Dress");

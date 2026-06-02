@@ -73,7 +73,9 @@ export const useCartStore = create<CartStore>()(
             ),
           });
         } else {
-          set({ items: [...items, { ...item, quantity: item.quantity || 1 }] });
+          const max = Math.max(1, item.maxStock || 1);
+          const qty = Math.min(Math.max(1, item.quantity || 1), max);
+          set({ items: [...items, { ...item, quantity: qty, maxStock: max }] });
         }
         set({ isOpen: true });
       },
@@ -105,7 +107,7 @@ export const useCartStore = create<CartStore>()(
       subtotal: () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
       count: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
     }),
-    { name: 'luxe-cart' }
+    { name: 'zane-cart' }
   )
 );
 
@@ -121,7 +123,7 @@ export const useWishlistStore = create<WishlistStore>()(
         else get().add(item);
       },
     }),
-    { name: 'luxe-wishlist' }
+    { name: 'zane-wishlist' }
   )
 );
 

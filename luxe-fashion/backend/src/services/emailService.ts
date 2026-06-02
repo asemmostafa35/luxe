@@ -20,7 +20,7 @@ import nodemailer from "nodemailer";
  * B) Gmail requires an **App Password**, not your account password.
  *    Regular Gmail passwords are rejected by SMTP even with correct settings.
  *
- * C) `SMTP_FROM` was set to `"Luxe Fashion <noreply@luxefashion.com>"` but
+ * C) `SMTP_FROM` was set to `"ZANE <hello@zanefashion.com>"` but
  *    Gmail rejects emails where the FROM address doesn't match the sending
  *    account — use the actual SMTP_USER address as the from.
  *
@@ -38,13 +38,13 @@ import nodemailer from "nodemailer";
  *  SMTP_SECURE=false
  *  SMTP_USER=youraddress@gmail.com          ← your actual Gmail address
  *  SMTP_PASS=xxxx xxxx xxxx xxxx            ← 16-char App Password (NOT account password)
- *  SMTP_FROM="Luxe Fashion <youraddress@gmail.com>"  ← must match SMTP_USER for Gmail
+ *  SMTP_FROM="ZANE <youraddress@gmail.com>"  ← must match SMTP_USER for Gmail
  *  FRONTEND_URL=http://localhost:3000
  *
  * HOW TO GET A GMAIL APP PASSWORD:
  *  1. Go to https://myaccount.google.com/security
  *  2. Enable 2-Step Verification (required)
- *  3. Search "App passwords" → create one named "Luxe Fashion"
+ *  3. Search "App passwords" → create one named "ZANE"
  *  4. Paste the 16-character code (with spaces) as SMTP_PASS
  *
  * ALTERNATIVE — Use Mailtrap for development (no Gmail setup needed):
@@ -127,13 +127,13 @@ export async function verifySmtpConnection(): Promise<void> {
 //    Otherwise fall back to the SMTP_USER address directly.
 function getFrom(): string {
   const smtpFrom = process.env.SMTP_FROM || "";
-  const smtpUser = process.env.SMTP_USER || "noreply@luxefashion.com";
+  const smtpUser = process.env.SMTP_USER || "hello@zanefashion.com";
 
   if (smtpFrom && smtpFrom.includes(smtpUser)) {
-    return smtpFrom; // e.g. "Luxe Fashion <user@gmail.com>"
+    return smtpFrom; // e.g. "ZANE <user@gmail.com>"
   }
   // Fallback: use raw address (always accepted by Gmail)
-  return smtpFrom || `"Luxe Fashion" <${smtpUser}>`;
+  return smtpFrom || `"ZANE" <${smtpUser}>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -166,10 +166,10 @@ const base = (content: string) => `
 </head>
 <body>
   <div class="wrap">
-    <div class="hdr"><h1>Luxe Fashion</h1></div>
+    <div class="hdr"><h1>ZANE</h1></div>
     <div class="body">${content}</div>
     <div class="ftr">
-      © ${new Date().getFullYear()} Luxe Fashion. All rights reserved.<br>
+      © ${new Date().getFullYear()} ZANE. All rights reserved.<br>
       You're receiving this because you have an account or placed an order.
     </div>
   </div>
@@ -189,10 +189,10 @@ export const emailService = {
       await getTransporter().sendMail({
         from: getFrom(),
         to,
-        subject: "Verify your email — Luxe Fashion",
+        subject: "Verify your email — ZANE",
         html: base(`
           <h2>Welcome, ${name}.</h2>
-          <p>Thank you for creating an account with Luxe Fashion. Please verify your email address to complete your registration and start shopping.</p>
+          <p>Thank you for creating an account with ZANE. Please verify your email address to complete your registration and start shopping.</p>
           <a href="${url}" class="btn">Verify Email Address</a>
           <hr class="divider">
           <p style="font-size:12px;color:#aaa">This link expires in 24 hours. If you didn't register, please ignore this email.</p>
@@ -203,7 +203,7 @@ export const emailService = {
         "[emailService] sendVerificationEmail failed:",
         err.message,
       );
-      if (process.env.NODE_ENV === "production") throw err;
+      throw err;
     }
   },
 
@@ -213,10 +213,10 @@ export const emailService = {
       await getTransporter().sendMail({
         from: getFrom(),
         to,
-        subject: "Reset your password — Luxe Fashion",
+        subject: "Reset your password — ZANE",
         html: base(`
           <h2>Password Reset</h2>
-          <p>Hi ${name}, we received a request to reset your Luxe Fashion account password.</p>
+          <p>Hi ${name}, we received a request to reset your ZANE account password.</p>
           <a href="${url}" class="btn">Reset Password</a>
           <hr class="divider">
           <p style="font-size:12px;color:#aaa">This link expires in 1 hour. If you didn't request this, no action is needed.</p>
@@ -227,7 +227,7 @@ export const emailService = {
         "[emailService] sendPasswordResetEmail failed:",
         err.message,
       );
-      if (process.env.NODE_ENV === "production") throw err;
+      throw err;
     }
   },
 

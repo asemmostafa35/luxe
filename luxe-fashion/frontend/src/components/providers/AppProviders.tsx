@@ -41,28 +41,6 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { QueryProvider } from "./QueryProvider";
 import { AuthProvider } from "./AuthProvider";
-import { useEffect, useState } from "react";
-
-// ✅ FIX: HydrationGate prevents Zustand-persist hydration mismatches.
-//    The component renders `null` on the server and during the first client
-//    render tick, then shows children after mount. This means server HTML and
-//    the first client paint both show nothing for persisted-state consumers,
-//    and React hydration succeeds without a mismatch.
-function HydrationGate({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  // Return children immediately (not null) to avoid layout shift, but wrap
-  // in a fragment that is stable — only interactive elements that read Zustand
-  // state (Navbar badge counts) will re-render after mount.
-  if (!mounted) {
-    // Render a structural skeleton that matches the server output shape
-    // so React doesn't need to discard and re-render the whole tree.
-    return <>{children}</>;
-  }
-  return <>{children}</>;
-}
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -70,28 +48,22 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       attribute="class"
       defaultTheme="light"
       enableSystem
-      // ✅ FIX: Prevents a flash of unstyled content during theme switch
-      disableTransitionOnChange={false}
+      disableTransitionOnChange
       // ✅ FIX: Tells next-themes to also set the `color-scheme` CSS property,
       //    which helps browsers render scrollbars and form controls correctly
       enableColorScheme
     >
       <QueryProvider>
         <AuthProvider>
-          {/* ✅ FIX: HydrationGate wraps the tree so Zustand persist state
-               is only read after the client has mounted, eliminating the
-               server/client count mismatch on cart/wishlist badges. */}
-          <HydrationGate>
-            {children}
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                className: "font-sans text-sm",
-                style: { borderRadius: 0, border: "1px solid #e0d9d0" },
-                duration: 3000,
-              }}
-            />
-          </HydrationGate>
+          {children}
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              className: "font-sans text-sm",
+              style: { borderRadius: 0, border: "1px solid #e0d9d0" },
+              duration: 3000,
+            }}
+          />
         </AuthProvider>
       </QueryProvider>
     </ThemeProvider>

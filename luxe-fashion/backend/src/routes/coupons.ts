@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../server';
-import { authenticate, requireAdmin } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
+import { requirePermission, requireStaff } from '../middleware/rbac';
 
 const router = Router();
 
@@ -29,14 +30,14 @@ router.post('/validate', async (req: any, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.get('/', authenticate, requireAdmin, async (_req, res, next) => {
+router.get('/', authenticate, requireStaff, requirePermission('coupons:read'), async (_req, res, next) => {
   try {
     const coupons = await prisma.coupon.findMany({ orderBy: { createdAt: 'desc' } });
     res.json(coupons);
   } catch (e) { next(e); }
 });
 
-router.post('/', authenticate, requireAdmin, async (req, res, next) => {
+router.post('/', authenticate, requireStaff, requirePermission('coupons:write'), async (req, res, next) => {
   try {
     const { code, ...rest } = req.body;
     const coupon = await prisma.coupon.create({
@@ -46,14 +47,14 @@ router.post('/', authenticate, requireAdmin, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-router.put('/:id', authenticate, requireAdmin, async (req, res, next) => {
+router.put('/:id', authenticate, requireStaff, requirePermission('coupons:write'), async (req, res, next) => {
   try {
     const coupon = await prisma.coupon.update({ where: { id: req.params.id }, data: req.body });
     res.json(coupon);
   } catch (e) { next(e); }
 });
 
-router.delete('/:id', authenticate, requireAdmin, async (req, res, next) => {
+router.delete('/:id', authenticate, requireStaff, requirePermission('coupons:write'), async (req, res, next) => {
   try {
     await prisma.coupon.delete({ where: { id: req.params.id } });
     res.json({ message: 'Coupon deleted' });

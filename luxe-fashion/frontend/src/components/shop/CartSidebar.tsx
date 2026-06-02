@@ -4,11 +4,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCartStore } from '@/store';
 import { useEffect } from 'react';
+import { formatEGP } from '@/lib/currency';
 
 export default function CartSidebar() {
   const { items, isOpen, closeCart, removeItem, updateQuantity, subtotal } = useCartStore();
   const sub = subtotal();
-  const shipping = sub >= 100 ? 0 : 9.99;
+  const shipping = 100;
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
@@ -96,7 +97,7 @@ export default function CartSidebar() {
                         </button>
                       </div>
                       <p className="text-sm font-medium text-brand-900 dark:text-white">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        {formatEGP(item.price * item.quantity)}
                       </p>
                     </div>
                   </div>
@@ -111,17 +112,14 @@ export default function CartSidebar() {
           <div className="border-t border-brand-100 dark:border-brand-800 px-6 py-5 space-y-4">
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-brand-600 dark:text-brand-400">
-                <span>Subtotal</span><span>${sub.toFixed(2)}</span>
+                <span>Subtotal</span><span>{formatEGP(sub)}</span>
               </div>
               <div className="flex justify-between text-brand-600 dark:text-brand-400">
                 <span>Shipping</span>
-                <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                <span>{formatEGP(shipping)}</span>
               </div>
-              {shipping > 0 && (
-                <p className="text-xs text-brand-400">Free shipping on orders over $100</p>
-              )}
               <div className="flex justify-between font-medium text-brand-900 dark:text-white text-base pt-2 border-t border-brand-100 dark:border-brand-800">
-                <span>Total</span><span>${(sub + shipping).toFixed(2)}</span>
+                <span>Total</span><span>{formatEGP(sub + shipping)}</span>
               </div>
             </div>
             <Link href="/checkout" onClick={closeCart} className="btn-primary w-full text-center block text-xs">

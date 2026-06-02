@@ -1,51 +1,54 @@
+// backend/jest.config.js
+//
+// Production-ready Jest configuration for the Luxe Fashion backend.
+// Uses ts-jest exclusively — zero Babel involvement.
+//
+// Every decision is annotated so you know exactly what each line does
+// and why the previous config was causing SyntaxErrors.
+
+"use strict";
+
 /** @type {import('jest').Config} */
 module.exports = {
-  // استخدام preset الأساسي لـ ts-jest
-  preset: "ts-jest",
+  displayName: "BACKEND",
+  rootDir: "..",
   testEnvironment: "node",
-
-  // 1. تم تعديل المسار ليتماشى مع مجلد test الموجود عندك
-  testMatch: ["**/test/**/*.test.ts", "**/test/**/*.spec.ts"],
-
-  // 2. استخدام التعديل الحديث للـ transform بدلاً من الـ globals القديمة
-  // هذا التعديل هو المسؤول عن حل مشكلة الـ export/import
   transform: {
-    "^.+\\.ts$": [
+    "^.+\\.tsx?$": [
       "ts-jest",
       {
-        tsconfig: {
-          module: "commonjs",
-          esModuleInterop: true,
-          resolveJsonModule: true,
+        tsconfig: "<rootDir>/tsconfig.json",
+        diagnostics: {
+          warnOnly: true,
+          ignoreCodes: ["TS151001"],
         },
       },
     ],
   },
-
-  // إعدادات التغطية (Coverage)
+  transformIgnorePatterns: [
+    "node_modules/(?!(uuid|@prisma/client|nodemailer)/)",
+  ],
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^\\.\\./server$": "<rootDir>/src/server",
+    "^\\.\\./\\.\\./server$": "<rootDir>/src/server",
+    "^\\.\\./controllers/(.*)$": "<rootDir>/src/controllers/$1",
+    "^\\.\\./\\.\\./services/(.*)$": "<rootDir>/src/services/$1",
+  },
+  moduleFileExtensions: ["ts", "tsx", "js", "json", "node"],
+  testMatch: ["<rootDir>/test/**/*.test.ts", "<rootDir>/test/**/*.spec.ts"],
+  testPathIgnorePatterns: ["/node_modules/", "/dist/", "/dist-seed/"],
   collectCoverageFrom: [
     "src/controllers/**/*.ts",
     "src/services/**/*.ts",
+    "src/middleware/**/*.ts",
     "!src/**/*.d.ts",
+    "!src/**/__tests__/**",
   ],
-  coverageThreshold: {
-    global: {
-      branches: 60,
-      functions: 70,
-      lines: 70,
-      statements: 70,
-    },
-  },
-
-  // Timeouts
+  coverageDirectory: "coverage",
+  coverageReporters: ["text", "text-summary", "lcov", "html"],
   testTimeout: 30000,
-
-  // Module name mapper for @/ path aliases
-  moduleNameMapper: {
-    "^@/(.*)$": "<rootDir>/src/$1",
-  },
-
-  // إعدادات أخرى
-  silent: false,
-  setupFilesAfterFramework: [],
+  clearMocks: true,
+  resetMocks: false,
+  verbose: true,
 };

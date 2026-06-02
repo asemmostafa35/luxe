@@ -1,31 +1,51 @@
-'use client';
-import { ReactNode } from 'react';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+"use client";
+import { ReactNode } from "react";
+import { TrendingUp, TrendingDown } from "lucide-react";
+import { AdminLoader } from "@/components/admin/AdminLoader";
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
 interface StatCardProps {
   title: string;
   value: string | number;
   change?: number;
   icon: ReactNode;
-  color?: string;
   prefix?: string;
   suffix?: string;
 }
-export function StatCard({ title, value, change, icon, color = 'bg-brand-900 dark:bg-white', prefix = '', suffix = '' }: StatCardProps) {
+
+export function StatCard({
+  title,
+  value,
+  change,
+  icon,
+  prefix = "",
+  suffix = "",
+}: StatCardProps) {
   return (
-    <div className="bg-white dark:bg-brand-950 border border-brand-100 dark:border-brand-800 p-5">
+    <div className="admin-card p-5">
       <div className="flex items-start justify-between mb-4">
-        <p className="text-xs tracking-widest uppercase text-brand-500">{title}</p>
-        <div className={`w-9 h-9 ${color} text-white dark:text-brand-900 flex items-center justify-center`}>
+        <p className="text-xs tracking-widest uppercase admin-muted">{title}</p>
+        <div
+          className="w-9 h-9 flex items-center justify-center border"
+          style={{
+            borderColor: "var(--admin-border)",
+            color: "var(--admin-fg)",
+          }}
+        >
           {icon}
         </div>
       </div>
-      <p className="font-serif text-3xl font-light text-brand-900 dark:text-white">
-        {prefix}{typeof value === 'number' ? value.toLocaleString() : value}{suffix}
+      <p
+        className="text-3xl font-light tracking-tight tabular-nums"
+        style={{ color: "var(--admin-fg)" }}
+      >
+        {prefix}
+        {typeof value === "number" ? value.toLocaleString() : value}
+        {suffix}
       </p>
       {change !== undefined && (
-        <div className={`flex items-center gap-1 mt-2 text-xs ${change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+        <div
+          className="flex items-center gap-1 mt-2 text-xs admin-muted"
+        >
           {change >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
           {Math.abs(change)}% vs last month
         </div>
@@ -34,61 +54,97 @@ export function StatCard({ title, value, change, icon, color = 'bg-brand-900 dar
   );
 }
 
-// ─── Page Header ──────────────────────────────────────────────────────────────
-export function AdminPageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
+export function AdminPageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="flex items-start justify-between mb-6">
       <div>
-        <h1 className="font-serif text-2xl font-light text-brand-900 dark:text-white">{title}</h1>
-        {subtitle && <p className="text-sm text-brand-500 mt-0.5">{subtitle}</p>}
+        <h1
+          className="text-2xl font-light tracking-tight"
+          style={{ color: "var(--admin-fg)" }}
+        >
+          {title}
+        </h1>
+        {subtitle && (
+          <p className="text-sm admin-muted mt-1">{subtitle}</p>
+        )}
       </div>
       {action && <div>{action}</div>}
     </div>
   );
 }
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
 const STATUS_MAP: Record<string, string> = {
-  PENDING:    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-  CONFIRMED:  'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
-  PROCESSING: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
-  SHIPPED:    'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400',
-  DELIVERED:  'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-  CANCELLED:  'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
-  REFUNDED:   'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
-  PAID:       'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-  FAILED:     'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
-  ACTIVE:     'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-  INACTIVE:   'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  PENDING: "border border-[var(--admin-border)] admin-muted",
+  CONFIRMED: "border border-[var(--admin-border)]",
+  PROCESSING: "border border-[var(--admin-border)]",
+  SHIPPED: "border border-[var(--admin-border)]",
+  DELIVERED: "border border-[var(--admin-border)]",
+  CANCELLED: "border border-[var(--admin-border)] opacity-60",
+  REFUNDED: "border border-[var(--admin-border)] opacity-50",
+  PAID: "border border-[var(--admin-border)]",
+  FAILED: "border border-[var(--admin-border)] opacity-60",
+  ACTIVE: "border border-[var(--admin-border)]",
+  INACTIVE: "border border-[var(--admin-border)] opacity-50",
 };
+
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-block text-xs px-2 py-0.5 font-medium ${STATUS_MAP[status] || 'bg-brand-100 text-brand-700 dark:bg-brand-800 dark:text-brand-300'}`}>
+    <span
+      className={`inline-block text-xs px-2 py-0.5 font-medium uppercase tracking-wide ${STATUS_MAP[status] || "border border-[var(--admin-border)]"}`}
+      style={{ color: "var(--admin-fg)" }}
+    >
       {status}
     </span>
   );
 }
 
-// ─── Data Table ───────────────────────────────────────────────────────────────
-interface Column<T> { key: string; label: string; render?: (row: T) => ReactNode; className?: string }
-interface TableProps<T> { columns: Column<T>[]; data: T[]; loading?: boolean; emptyText?: string }
-export function DataTable<T extends { id: string }>({ columns, data, loading, emptyText = 'No data found' }: TableProps<T>) {
-  if (loading) return (
-    <div className="bg-white dark:bg-brand-950 border border-brand-100 dark:border-brand-800">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="flex gap-4 px-5 py-3.5 border-b border-brand-50 dark:border-brand-900">
-          {columns.map((_, j) => <div key={j} className="h-4 skeleton flex-1" />)}
-        </div>
-      ))}
-    </div>
-  );
+interface Column<T> {
+  key: string;
+  label: string;
+  render?: (row: T) => ReactNode;
+  className?: string;
+}
+interface TableProps<T> {
+  columns: Column<T>[];
+  data: T[];
+  loading?: boolean;
+  emptyText?: string;
+}
+
+export function DataTable<T extends { id: string }>({
+  columns,
+  data,
+  loading,
+  emptyText = "No data found",
+}: TableProps<T>) {
+  if (loading)
+    return (
+      <div className="admin-card overflow-hidden flex flex-col items-center justify-center py-16">
+        <AdminLoader />
+        <p className="text-xs uppercase tracking-widest admin-muted mt-4">Loading</p>
+      </div>
+    );
   return (
-    <div className="bg-white dark:bg-brand-950 border border-brand-100 dark:border-brand-800 overflow-x-auto">
+    <div className="admin-card admin-scroll overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-brand-100 dark:border-brand-800">
-            {columns.map(col => (
-              <th key={col.key} className={`px-4 py-3 text-left text-xs tracking-widest uppercase text-brand-500 font-medium whitespace-nowrap ${col.className || ''}`}>
+          <tr
+            className="border-b"
+            style={{ borderColor: "var(--admin-border)" }}
+          >
+            {columns.map((col) => (
+              <th
+                key={col.key}
+                className={`px-4 py-3 text-left text-xs tracking-widest uppercase font-medium whitespace-nowrap admin-muted ${col.className || ""}`}
+              >
                 {col.label}
               </th>
             ))}
@@ -96,13 +152,36 @@ export function DataTable<T extends { id: string }>({ columns, data, loading, em
         </thead>
         <tbody>
           {data.length === 0 ? (
-            <tr><td colSpan={columns.length} className="px-4 py-12 text-center text-sm text-brand-500">{emptyText}</td></tr>
+            <tr>
+              <td
+                colSpan={columns.length}
+                className="px-4 py-12 text-center text-sm admin-muted"
+              >
+                {emptyText}
+              </td>
+            </tr>
           ) : (
-            data.map(row => (
-              <tr key={row.id} className="border-b border-brand-50 dark:border-brand-900 hover:bg-brand-50 dark:hover:bg-brand-900/50 transition-colors">
-                {columns.map(col => (
-                  <td key={col.key} className={`px-4 py-3.5 text-sm text-brand-700 dark:text-brand-300 ${col.className || ''}`}>
-                    {col.render ? col.render(row) : String((row as any)[col.key] ?? '—')}
+            data.map((row) => (
+              <tr
+                key={row.id}
+                className="border-b transition-colors"
+                style={{ borderColor: "var(--admin-border)" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--admin-hover)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                }}
+              >
+                {columns.map((col) => (
+                  <td
+                    key={col.key}
+                    className={`px-4 py-3.5 text-sm align-middle ${col.className || ""}`}
+                    style={{ color: "var(--admin-fg)" }}
+                  >
+                    {col.render
+                      ? col.render(row)
+                      : String((row as Record<string, unknown>)[col.key] ?? "—")}
                   </td>
                 ))}
               </tr>
@@ -114,29 +193,63 @@ export function DataTable<T extends { id: string }>({ columns, data, loading, em
   );
 }
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
-export function Pagination({ page, pages, onChange }: { page: number; pages: number; onChange: (p: number) => void }) {
+export function Pagination({
+  page,
+  pages,
+  onChange,
+}: {
+  page: number;
+  pages: number;
+  onChange: (p: number) => void;
+}) {
   if (pages <= 1) return null;
   return (
     <div className="flex items-center justify-between mt-4">
-      <p className="text-xs text-brand-500">Page {page} of {pages}</p>
+      <p className="text-xs admin-muted">
+        Page {page} of {pages}
+      </p>
       <div className="flex gap-1">
-        <button disabled={page <= 1} onClick={() => onChange(page - 1)}
-          className="px-3 py-1.5 text-xs border border-brand-200 dark:border-brand-700 disabled:opacity-40 hover:border-brand-900 dark:hover:border-white transition-colors">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onChange(page - 1)}
+          className="admin-btn-outline px-3 py-1.5 disabled:opacity-40"
+        >
           Prev
         </button>
         {Array.from({ length: Math.min(pages, 7) }, (_, i) => {
           const p = i + Math.max(1, page - 3);
           if (p > pages) return null;
+          const active = page === p;
           return (
-            <button key={p} onClick={() => onChange(p)}
-              className={`w-8 h-8 text-xs transition-colors ${page === p ? 'bg-brand-900 dark:bg-white text-white dark:text-brand-900' : 'border border-brand-200 dark:border-brand-700 hover:border-brand-900 dark:hover:border-white'}`}>
+            <button
+              key={p}
+              type="button"
+              onClick={() => onChange(p)}
+              className="w-8 h-8 text-xs transition-colors border"
+              style={
+                active
+                  ? {
+                      backgroundColor: "var(--admin-active-bg)",
+                      color: "var(--admin-active-fg)",
+                      borderColor: "var(--admin-border)",
+                    }
+                  : {
+                      borderColor: "var(--admin-border)",
+                      color: "var(--admin-fg)",
+                    }
+              }
+            >
               {p}
             </button>
           );
         })}
-        <button disabled={page >= pages} onClick={() => onChange(page + 1)}
-          className="px-3 py-1.5 text-xs border border-brand-200 dark:border-brand-700 disabled:opacity-40 hover:border-brand-900 dark:hover:border-white transition-colors">
+        <button
+          type="button"
+          disabled={page >= pages}
+          onClick={() => onChange(page + 1)}
+          className="admin-btn-outline px-3 py-1.5 disabled:opacity-40"
+        >
           Next
         </button>
       </div>
@@ -144,19 +257,49 @@ export function Pagination({ page, pages, onChange }: { page: number; pages: num
   );
 }
 
-// ─── Modal ────────────────────────────────────────────────────────────────────
-export function Modal({ open, onClose, title, children, size = 'md' }: {
-  open: boolean; onClose: () => void; title: string; children: ReactNode; size?: 'sm' | 'md' | 'lg' | 'xl'
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  size = "md",
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+  size?: "sm" | "md" | "lg" | "xl";
 }) {
   if (!open) return null;
-  const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' };
+  const widths = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-4xl" };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className={`relative bg-white dark:bg-brand-950 w-full ${widths[size]} max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-in`}>
-        <div className="flex items-center justify-between px-6 py-4 border-b border-brand-100 dark:border-brand-800">
-          <h3 className="font-serif text-xl font-light text-brand-900 dark:text-white">{title}</h3>
-          <button onClick={onClose} className="text-brand-400 hover:text-brand-900 dark:hover:text-white transition-colors">✕</button>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/50 dark:bg-black/80"
+        onClick={onClose}
+      />
+      <div
+        className={`relative w-full ${widths[size]} max-h-[90vh] overflow-y-auto admin-card`}
+        style={{ backgroundColor: "var(--admin-surface)" }}
+      >
+        <div
+          className="flex items-center justify-between px-6 py-4 border-b"
+          style={{ borderColor: "var(--admin-border)" }}
+        >
+          <h3
+            className="text-xl font-light tracking-tight"
+            style={{ color: "var(--admin-fg)" }}
+          >
+            {title}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-lg admin-muted hover:opacity-70 transition-opacity"
+            aria-label="Close"
+          >
+            ✕
+          </button>
         </div>
         <div className="p-6">{children}</div>
       </div>
@@ -164,10 +307,21 @@ export function Modal({ open, onClose, title, children, size = 'md' }: {
   );
 }
 
-// ─── Search Input ─────────────────────────────────────────────────────────────
-export function SearchInput({ value, onChange, placeholder = 'Search...' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+export function SearchInput({
+  value,
+  onChange,
+  placeholder = "Search...",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
   return (
-    <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-      className="border border-brand-200 dark:border-brand-700 px-3 py-2 text-sm bg-white dark:bg-brand-950 text-brand-900 dark:text-white placeholder:text-brand-400 focus:outline-none focus:border-brand-900 dark:focus:border-white transition-colors w-full md:w-64" />
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="admin-input w-full md:w-64"
+    />
   );
 }

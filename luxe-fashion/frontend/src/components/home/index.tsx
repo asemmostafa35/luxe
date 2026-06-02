@@ -194,7 +194,7 @@ export function InstagramFeed() {
     <section className="py-16 bg-brand-50 dark:bg-brand-900/20">
       <div className="max-w-screen-2xl mx-auto px-4 md:px-8">
         <div className="text-center mb-8">
-          <p className="label-small text-brand-500 mb-2">@luxefashion</p>
+          <p className="label-small text-brand-500 mb-2">@zanefashion</p>
           <h2 className="font-serif text-3xl font-light text-brand-900 dark:text-white">Follow Our Story</h2>
         </div>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2">

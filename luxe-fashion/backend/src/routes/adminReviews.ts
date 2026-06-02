@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { prisma } from '../server';
-import { authenticate, requireAdmin } from '../middleware/auth';
+import { authenticate } from '../middleware/auth';
+import { requirePermission, requireStaff } from '../middleware/rbac';
 
 const router = Router();
-router.use(authenticate, requireAdmin);
+router.use(authenticate, requireStaff, requirePermission('reviews:read'));
 
 // GET /api/admin/reviews?page=1&limit=20&approved=pending|approved|all
 router.get('/', async (req: any, res, next) => {

@@ -28,10 +28,20 @@ export const optionalAuth = (req: Request, res: Response, next: NextFunction) =>
   next();
 };
 
+/** @deprecated Prefer requireStaff + requirePermission from ./rbac */
 export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
   const user = (req as any).user;
   if (!user || !['ADMIN', 'SUPER_ADMIN'].includes(user.role)) {
     return res.status(403).json({ error: 'Admin access required' });
+  }
+  next();
+};
+
+export const requireStaffOrLegacyAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user;
+  const staff = ['SUPER_ADMIN', 'ADMIN', 'EDITOR', 'VIEWER'];
+  if (!user || !staff.includes(user.role)) {
+    return res.status(403).json({ error: 'Staff access required' });
   }
   next();
 };

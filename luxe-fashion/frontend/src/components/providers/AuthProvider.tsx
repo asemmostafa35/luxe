@@ -1,6 +1,11 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 import { authApi } from "@/lib/api";
+import {
+  hasPermission,
+  isStaffRole,
+  type Permission,
+} from "@/lib/rbac/permissions";
 
 interface User {
   id: string;
@@ -19,6 +24,8 @@ interface AuthContextType {
   logout: () => void;
   refresh: () => Promise<void>;
   isAdmin: boolean;
+  isStaff: boolean;
+  hasPermission: (permission: Permission) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -89,6 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         refresh,
         isAdmin: user?.role === "ADMIN" || user?.role === "SUPER_ADMIN",
+        isStaff: user ? isStaffRole(user.role) : false,
+        hasPermission: (permission: Permission) =>
+          user ? hasPermission(user.role, permission) : false,
       }}
     >
       {children}

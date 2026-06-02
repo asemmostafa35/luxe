@@ -21,9 +21,8 @@ import wishlistRoutes from "./routes/wishlist";
 import reviewRoutes from "./routes/reviews";
 import couponRoutes from "./routes/coupons";
 import bannerRoutes from "./routes/banners";
-import adminRoutes from "./routes/admin";
+import adminRoutes, { publicSettingsRouter } from "./routes/admin";
 import adminReviewRoutes from "./routes/adminReviews";
-import paymentRoutes from "./routes/payments";
 import cloudinaryUploadRouter from "./services/cloudinaryService";
 import contactRoutes from "./routes/contact";
 import newsletterRoutes from "./routes/newsletter";
@@ -63,13 +62,6 @@ app.use("/api/", limiter);
 app.use("/api/auth/", authLimiter);
 
 app.use(compression());
-// Stripe webhook needs raw body — mount BEFORE json parser
-import { stripeWebhook } from "./services/paymentService";
-app.post(
-  "/api/payments/stripe/webhook",
-  express.raw({ type: "application/json" }),
-  stripeWebhook,
-);
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -98,9 +90,9 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/banners", bannerRoutes);
+app.use("/api/settings", publicSettingsRouter);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/reviews", adminReviewRoutes);
-app.use("/api/payments", paymentRoutes);
 app.use("/api/upload", cloudinaryUploadRouter);
 app.use("/api/contact", contactRoutes);
 app.use("/api/newsletter", newsletterRoutes);
@@ -118,13 +110,14 @@ process.on("SIGTERM", async () => {
   process.exit(0);
 });
 
-app.listen(PORT, async () => {
-  console.log(`🚀 Luxe Fashion API  →  http://localhost:${PORT}`);
-  console.log(
-    `📊 Environment       →  ${process.env.NODE_ENV || "development"}`,
-  );
-  // ✅ FIX: Verify SMTP on startup so misconfiguration is caught immediately
-  await verifySmtpConnection();
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, async () => {
+    console.log(`🚀 ZANE API  →  http://localhost:${PORT}`);
+    console.log(
+      `📊 Environment       →  ${process.env.NODE_ENV || "development"}`,
+    );
+    await verifySmtpConnection();
+  });
+}
 
 export default app;

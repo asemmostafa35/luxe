@@ -9,6 +9,8 @@ datasource db {
 
 enum Role {
   USER
+  VIEWER
+  EDITOR
   ADMIN
   SUPER_ADMIN
 }
@@ -395,6 +397,17 @@ model Announcement {
   createdAt   DateTime @default(now())
 
   @@map("announcements")
+}
+
+model StoreSettings {
+  id                    String   @id @default("default")
+  storeName             String   @default("ZANE")
+  contactEmail          String   @default("hello@zanefashion.com")
+  announcementEnabled   Boolean  @default(true)
+  activeAnnouncementId  String?
+  updatedAt             DateTime @updatedAt
+
+  @@map("store_settings")
 }
 
 model Notification {

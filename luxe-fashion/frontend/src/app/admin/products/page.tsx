@@ -11,7 +11,13 @@ import {
   SearchInput,
 } from "@/components/admin/AdminUI";
 import { Plus, Edit, Trash2, Upload, X } from "lucide-react";
+import { AdminTableThumb } from "@/components/admin/AdminTableThumb";
+import {
+  ProductVariantBuilder,
+  type ProductVariantInput,
+} from "@/components/admin/ProductVariantBuilder";
 import toast from "react-hot-toast";
+import { formatEGP } from "@/lib/currency";
 
 const EMPTY_FORM = {
   name: "",
@@ -29,7 +35,7 @@ const EMPTY_FORM = {
   isNewArrival: false,
   isBestSeller: false,
   images: [] as any[],
-  variants: [] as any[],
+  variants: [] as ProductVariantInput[],
 };
 
 export default function AdminProductsPage() {
@@ -40,14 +46,6 @@ export default function AdminProductsPage() {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const [uploading, setUploading] = useState(false);
-  const [variantRow, setVariantRow] = useState({
-    size: "",
-    color: "",
-    colorHex: "",
-    stock: "",
-    price: "",
-  });
-
   const { data, isLoading } = useQuery({
     queryKey: ["admin-products", page, search],
     queryFn: () => productsApi.getAll({ page, limit: 15, search }),
@@ -116,7 +114,13 @@ export default function AdminProductsPage() {
       //    The backend update handler intentionally ignores these (no-op for
       //    existing images) so they're safe to carry in state for display only.
       images: p.images || [],
-      variants: p.variants || [],
+      variants: (p.variants || []).map((v: any) => ({
+        size: v.size ?? null,
+        color: v.color ?? null,
+        colorHex: v.colorHex ?? null,
+        stock: Number(v.stock) || 0,
+        price: v.price != null ? Number(v.price) : null,
+      })),
     });
     setModalOpen(true);
   };
@@ -147,22 +151,6 @@ export default function AdminProductsPage() {
     } finally {
       setUploading(false);
     }
-  };
-
-  const addVariant = () => {
-    if (!variantRow.stock) return;
-    setForm((p) => ({
-      ...p,
-      variants: [
-        ...p.variants,
-        {
-          ...variantRow,
-          stock: Number(variantRow.stock),
-          price: variantRow.price ? Number(variantRow.price) : null,
-        },
-      ],
-    }));
-    setVariantRow({ size: "", color: "", colorHex: "", stock: "", price: "" });
   };
 
   const handleSubmit = () => {
@@ -236,7 +224,13 @@ export default function AdminProductsPage() {
         isNewArrival: form.isNewArrival,
         isBestSeller: form.isBestSeller,
         images: form.images.filter((img: any) => img.url),
-        variants: form.variants,
+        variants: form.variants.map((v) => ({
+          size: v.size,
+          color: v.color,
+          colorHex: v.colorHex,
+          stock: v.stock,
+          price: v.price,
+        })),
       };
       saveMutation.mutate(payload);
     }
@@ -246,31 +240,23 @@ export default function AdminProductsPage() {
     {
       key: "image",
       label: "",
+      className: "w-14 admin-table-cell",
       render: (p: any) => (
-        <div className="w-10 h-12 overflow-hidden bg-brand-100 dark:bg-brand-800 flex-shrink-0">
-          {/* ✅ Using plain <img> here (not next/image) because the admin table
-               is an internal dashboard — no CLS budget concerns, and it avoids
-               the remotePatterns restriction for any URL format. */}
-          {p.images?.[0]?.url && (
-            <img
-              src={p.images[0].url}
-              alt={p.images[0].alt || p.name}
-              className="w-full h-full object-cover"
-            />
-          )}
-        </div>
+        <AdminTableThumb
+          items={p.images?.[0]?.url ? [{ image: p.images[0].url, name: p.name }] : []}
+          alt={p.name}
+        />
       ),
-      className: "w-14",
     },
     {
       key: "name",
       label: "Product",
       render: (p: any) => (
         <div>
-          <p className="text-sm font-medium text-brand-900 dark:text-white">
+          <p className="text-sm font-medium" style={{ color: "var(--admin-fg)" }}>
             {p.name}
           </p>
-          <p className="text-xs text-brand-500">{p.sku}</p>
+          <p className="text-xs admin-muted">{p.sku}</p>
         </div>
       ),
     },
@@ -284,12 +270,12 @@ export default function AdminProductsPage() {
       label: "Price",
       render: (p: any) => (
         <div>
-          <p className="font-medium text-brand-900 dark:text-white">
-            ${Number(p.price).toFixed(2)}
+          <p className="font-medium" style={{ color: "var(--admin-fg)" }}>
+            {formatEGP(Number(p.price))}
           </p>
           {p.comparePrice && (
-            <p className="text-xs text-brand-400 line-through">
-              ${Number(p.comparePrice).toFixed(2)}
+            <p className="text-xs admin-muted line-through">
+              {formatEGP(Number(p.comparePrice))}
             </p>
           )}
         </div>
@@ -300,21 +286,9 @@ export default function AdminProductsPage() {
       label: "Flags",
       render: (p: any) => (
         <div className="flex gap-1 flex-wrap">
-          {p.isNewArrival && (
-            <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400 px-1.5 py-0.5">
-              New
-            </span>
-          )}
-          {p.isBestSeller && (
-            <span className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400 px-1.5 py-0.5">
-              Best
-            </span>
-          )}
-          {p.isFeatured && (
-            <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400 px-1.5 py-0.5">
-              Featured
-            </span>
-          )}
+          {p.isNewArrival && <span className="admin-badge-bw">New</span>}
+          {p.isBestSeller && <span className="admin-badge-bw">Best</span>}
+          {p.isFeatured && <span className="admin-badge-bw">Featured</span>}
         </div>
       ),
     },
@@ -328,21 +302,26 @@ export default function AdminProductsPage() {
     {
       key: "actions",
       label: "",
+      className: "w-24",
       render: (p: any) => (
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1.5 justify-end">
           <button
+            type="button"
+            title="Edit product"
             onClick={() => openEdit(p)}
-            className="p-1.5 text-brand-400 hover:text-brand-900 dark:hover:text-white transition-colors"
+            className="admin-icon-btn"
           >
-            <Edit size={14} />
+            <Edit size={14} strokeWidth={1.5} />
           </button>
           <button
+            type="button"
+            title="Delete product"
             onClick={() => {
               if (confirm("Delete this product?")) deleteMutation.mutate(p.id);
             }}
-            className="p-1.5 text-brand-400 hover:text-red-500 transition-colors"
+            className="admin-icon-btn"
           >
-            <Trash2 size={14} />
+            <Trash2 size={14} strokeWidth={1.5} />
           </button>
         </div>
       ),
@@ -592,78 +571,28 @@ export default function AdminProductsPage() {
             </div>
           </div>
 
-          {/* Variants */}
-          <div>
-            <label className="text-xs tracking-widest uppercase text-brand-500 block mb-2">
-              Variants (Size / Color / Stock)
-            </label>
-            <div className="space-y-2 mb-3">
-              {form.variants.map((v: any, i: number) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 text-xs bg-brand-50 dark:bg-brand-900 px-3 py-2"
-                >
-                  {v.size && (
-                    <span className="font-medium">Size: {v.size}</span>
-                  )}
-                  {v.color && (
-                    <span className="font-medium">Color: {v.color}</span>
-                  )}
-                  <span>Stock: {v.stock}</span>
-                  {v.price && <span>Price: ${v.price}</span>}
-                  <button
-                    onClick={() =>
-                      setForm((p) => ({
-                        ...p,
-                        variants: p.variants.filter(
-                          (_: any, idx: number) => idx !== i,
-                        ),
-                      }))
-                    }
-                    className="ml-auto text-red-500 hover:text-red-700"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {[
-                { key: "size", placeholder: "Size (S/M/L)" },
-                { key: "color", placeholder: "Color name" },
-                { key: "colorHex", placeholder: "#hex" },
-                { key: "stock", placeholder: "Stock *", type: "number" },
-                { key: "price", placeholder: "Price (opt)", type: "number" },
-              ].map(({ key, placeholder, type = "text" }) => (
-                <input
-                  key={key}
-                  value={(variantRow as any)[key]}
-                  type={type}
-                  onChange={(e) =>
-                    setVariantRow((p) => ({ ...p, [key]: e.target.value }))
-                  }
-                  placeholder={placeholder}
-                  className="border border-brand-200 dark:border-brand-700 px-2 py-1.5 text-xs bg-transparent focus:outline-none focus:border-brand-900 dark:focus:border-white"
-                />
-              ))}
-            </div>
+          <ProductVariantBuilder
+            key={editing?.id ?? "new-product"}
+            variants={form.variants}
+            onChange={(variants) => setForm((p) => ({ ...p, variants }))}
+          />
+
+          <div
+            className="flex justify-end gap-3 pt-2 border-t"
+            style={{ borderColor: "var(--admin-border)" }}
+          >
             <button
               type="button"
-              onClick={addVariant}
-              className="mt-2 text-xs border border-brand-200 dark:border-brand-700 px-3 py-1.5 hover:border-brand-900 dark:hover:border-white transition-colors flex items-center gap-1"
+              onClick={closeModal}
+              className="admin-btn-outline text-xs"
             >
-              <Plus size={12} /> Add Variant
-            </button>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2 border-t border-brand-100 dark:border-brand-800">
-            <button onClick={closeModal} className="btn-outline text-xs">
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={saveMutation.isPending}
-              className="btn-primary text-xs"
+              className="admin-btn-primary text-xs"
             >
               {saveMutation.isPending
                 ? "Saving…"

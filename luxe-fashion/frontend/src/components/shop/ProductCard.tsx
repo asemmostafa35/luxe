@@ -7,6 +7,7 @@ import { Heart, ShoppingBag, Eye, Star } from "lucide-react";
 import { useCartStore, useWishlistStore, useUIStore } from "@/store";
 import toast from "react-hot-toast";
 import clsx from "clsx";
+import { formatEGP } from "@/lib/currency";
 
 interface Product {
   id: string;
@@ -214,11 +215,11 @@ export default function ProductCard({ product, className }: Props) {
         {/* Price */}
         <div className="flex items-center gap-2">
           <span className="price text-sm">
-            ${Number(product.price || 0).toFixed(2)}
+            {formatEGP(Number(product.price || 0))}
           </span>
           {product.comparePrice && (
             <span className="price-compare">
-              ${Number(product.comparePrice || 0).toFixed(2)}
+              {formatEGP(Number(product.comparePrice || 0))}
             </span>
           )}
         </div>

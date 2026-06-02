@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
+import { formatEGP } from '@/lib/currency';
 
 export default function SearchOverlay({ onClose }: { onClose: () => void }) {
   const [q, setQ] = useState('');
@@ -85,7 +86,7 @@ export default function SearchOverlay({ onClose }: { onClose: () => void }) {
                           <p className="text-sm font-medium text-brand-900 dark:text-white truncate">{p.name}</p>
                           <p className="text-xs text-brand-500">{p.category?.name}</p>
                         </div>
-                        <p className="text-sm font-medium text-brand-900 dark:text-white flex-shrink-0">${Number(p.price).toFixed(2)}</p>
+                        <p className="text-sm font-medium text-brand-900 dark:text-white flex-shrink-0">{formatEGP(Number(p.price))}</p>
                       </Link>
                     ))}
                   </div>

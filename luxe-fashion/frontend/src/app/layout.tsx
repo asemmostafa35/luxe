@@ -7,28 +7,18 @@ import CartSidebar from "@/components/shop/CartSidebar";
 import QuickViewModal from "@/components/shop/QuickViewModal";
 import "@/styles/globals.css";
 
-// ✅ FIX: Add favicon via Next.js Metadata API.
-// Using an SVG data-URI favicon so no external file is required.
-// The "LF" monogram matches the brand's text logo shown in the Navbar.
+const faviconSvg =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Georgia%2C serif' font-size='14' font-weight='300' letter-spacing='1' fill='%23ffffff'%3EZ%3C/text%3E%3C/svg%3E";
+
+const appleIconSvg =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Georgia%2C serif' font-size='80' font-weight='300' letter-spacing='4' fill='%23ffffff'%3EZ%3C/text%3E%3C/svg%3E";
+
 export const metadata: Metadata = {
-  title: "Luxe Fashion",
-  description: "Premium fashion collection",
+  title: "ZANE",
+  description: "Premium contemporary fashion by ZANE",
   icons: {
-    // SVG favicon — modern browsers prefer this; it scales perfectly at any size
-    icon: [
-      {
-        url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Georgia%2C serif' font-size='14' font-weight='300' letter-spacing='1' fill='%23ffffff'%3ELF%3C/text%3E%3C/svg%3E",
-        type: "image/svg+xml",
-      },
-    ],
-    // Apple touch icon — shown on iOS home screen shortcuts
-    apple: [
-      {
-        url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Georgia%2C serif' font-size='80' font-weight='300' letter-spacing='4' fill='%23ffffff'%3ELF%3C/text%3E%3C/svg%3E",
-        type: "image/svg+xml",
-        sizes: "180x180",
-      },
-    ],
+    icon: [{ url: faviconSvg, type: "image/svg+xml" }],
+    apple: [{ url: appleIconSvg, type: "image/svg+xml", sizes: "180x180" }],
   },
 };
 
@@ -40,17 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/*
-         * ✅ FIX: Explicit <link> tag as a belt-and-suspenders fallback for
-         * browsers that do not yet read the Metadata API icons field.
-         * The SVG encodes a minimal "LF" monogram on a black background,
-         * consistent with the brand's Navbar logo style.
-         */}
-        <link
-          rel="icon"
-          type="image/svg+xml"
-          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23111111'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Georgia%2C serif' font-size='14' font-weight='300' letter-spacing='1' fill='%23ffffff'%3ELF%3C/text%3E%3C/svg%3E"
-        />
+        <link rel="icon" type="image/svg+xml" href={faviconSvg} />
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>
       <body>

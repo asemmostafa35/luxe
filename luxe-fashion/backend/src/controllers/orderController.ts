@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../server';
 import { Prisma } from '@prisma/client';
 import { emailService } from '../services/emailService';
+import { hasPermission } from '../lib/rbac/permissions';
 
 const generateOrderNumber = () => {
   const ts = Date.now().toString(36).toUpperCase();
@@ -12,7 +13,15 @@ const generateOrderNumber = () => {
 export const createOrder = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user?.userId;
-    const { items, addressId, guestEmail, guestName, guestPhone, paymentMethod, couponCode, notes } = req.body;
+    const {
+      items,
+      addressId,
+      guestEmail,
+      guestName,
+      guestPhone,
+      couponCode,
+      notes,
+    } = req.body;
 
     if (!items?.length) return res.status(400).json({ error: 'No items provided' });
 
@@ -81,8 +90,8 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
     }
 
     const afterDiscount = subtotal.sub(discount);
-    const shipping = subtotal.gte(100) ? new Prisma.Decimal(0) : new Prisma.Decimal(9.99);
-    const tax = afterDiscount.mul(0.08);
+    const shipping = new Prisma.Decimal(100);
+    const tax = new Prisma.Decimal(0);
     const total = afterDiscount.add(shipping).add(tax);
 
     const order = await prisma.order.create({
@@ -93,7 +102,7 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         guestEmail: guestEmail || null,
         guestName: guestName || null,
         guestPhone: guestPhone || null,
-        paymentMethod,
+        paymentMethod: "CASH_ON_DELIVERY",
         subtotal,
         discount,
         shipping,
@@ -102,7 +111,9 @@ export const createOrder = async (req: Request, res: Response, next: NextFunctio
         couponId,
         notes: notes || null,
         items: { create: orderItems },
-        statusHistory: { create: [{ status: 'PENDING', note: 'Order placed' }] },
+        statusHistory: {
+          create: [{ status: "PENDING", note: "COD order placed" }],
+        },
       },
       include: { items: true, address: true, user: true, statusHistory: true },
     });
@@ -160,7 +171,14 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
         where, skip, take: Number(limit),
         orderBy: { createdAt: 'desc' },
         include: {
-          items: { include: { product: { select: { name: true } } } },
+          items: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+              quantity: true,
+            },
+          },
           user: { select: { firstName: true, lastName: true, email: true } },
           address: true,
         },
@@ -177,7 +195,7 @@ export const getOrder = async (req: Request, res: Response, next: NextFunction) 
     const { id } = req.params;
     const userId = (req as any).user?.userId;
     const role = (req as any).user?.role;
-    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(role);
+    const isAdmin = role && hasPermission(role, 'orders:read');
 
     const order = await prisma.order.findUnique({
       where: { id },

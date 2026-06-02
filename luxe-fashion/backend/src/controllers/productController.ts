@@ -33,16 +33,41 @@ function sanitiseImageForCreate(img: any) {
   };
 }
 
+function normalizeColorHex(raw: unknown): string | null {
+  if (raw == null || raw === "") return null;
+  let hex = String(raw).trim().replace(/^#/, "");
+  if (/^[0-9A-Fa-f]{3}$/.test(hex)) {
+    hex = hex
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  if (!/^[0-9A-Fa-f]{6}$/.test(hex)) return null;
+  return `#${hex.toUpperCase()}`;
+}
+
 /**
  * Strip fields that Prisma does not accept on ProductVariant create.
+ * size/color are plain strings (not enums) — any tops or pants label is valid.
  */
 function sanitiseVariantForCreate(v: any) {
+  const size =
+    v.size != null && String(v.size).trim() !== ""
+      ? String(v.size).trim()
+      : null;
+  const colorHex = normalizeColorHex(v.colorHex);
+  const color =
+    colorHex ??
+    (v.color != null && String(v.color).trim() !== ""
+      ? String(v.color).trim()
+      : null);
+
   return {
-    size: v.size ?? null,
-    color: v.color ?? null,
-    colorHex: v.colorHex ?? null,
-    stock: Number(v.stock) || 0,
-    price: v.price != null ? new Prisma.Decimal(v.price) : null,
+    size,
+    color,
+    colorHex,
+    stock: Math.max(0, Number(v.stock) || 0),
+    price: v.price != null && v.price !== "" ? new Prisma.Decimal(v.price) : null,
     isActive: v.isActive ?? true,
   };
 }
@@ -75,10 +100,25 @@ export const getProducts = async (
     } = req.query;
 
     const skip = (Number(page) - 1) * Number(limit);
+    const variantFilters: Prisma.ProductVariantWhereInput = {};
+    if (color) {
+      variantFilters.color = {
+        contains: color as string,
+        mode: "insensitive",
+      };
+    }
+    if (size) {
+      variantFilters.size = {
+        contains: size as string,
+        mode: "insensitive",
+      };
+    }
 
     const where: Prisma.ProductWhereInput = {
       isActive: true,
-      ...(category && { category: { slug: category as string } }),
+      ...(category && {
+        category: { slug: category as string, isActive: true },
+      }),
       ...(search && {
         OR: [
           { name: { contains: search as string, mode: "insensitive" } },
@@ -98,17 +138,19 @@ export const getProducts = async (
       ...(isNew === "true" && { isNewArrival: true }),
       ...(isBest === "true" && { isBestSeller: true }),
       ...(isFeatured === "true" && { isFeatured: true }),
-      ...(color && {
+      ...((color || size) && {
         variants: {
-          some: { color: { contains: color as string, mode: "insensitive" } },
+          some: variantFilters,
         },
       }),
-      ...(size && {
-        variants: {
-          some: { size: { contains: size as string, mode: "insensitive" } },
+      ...(tags && {
+        tags: {
+          hasSome: (tags as string)
+            .split(",")
+            .map((t) => t.trim())
+            .filter(Boolean),
         },
       }),
-      ...(tags && { tags: { hasSome: (tags as string).split(",") } }),
     };
 
     const orderBy: Prisma.ProductOrderByWithRelationInput =
@@ -285,12 +327,7 @@ export const updateProduct = async (
     // Prisma requires an explicit nested write operation ({ upsert/create/... })
     // not raw arrays. For the update flow we leave existing images alone; the
     // admin can delete and re-upload from the product form.
-    const {
-      images: _images,
-      variants: _variants,
-      tags: _tags,
-      ...scalarData
-    } = data;
+    const { images, variants, tags: _tags, ...scalarData } = data;
 
     const tags = data.tags !== undefined ? normaliseTags(data.tags) : undefined;
 
@@ -303,6 +340,18 @@ export const updateProduct = async (
         comparePrice: data.comparePrice
           ? new Prisma.Decimal(data.comparePrice)
           : null,
+        ...(Array.isArray(images) && {
+          images: {
+            deleteMany: {},
+            create: images.map(sanitiseImageForCreate),
+          },
+        }),
+        ...(Array.isArray(variants) && {
+          variants: {
+            deleteMany: {},
+            create: variants.map(sanitiseVariantForCreate),
+          },
+        }),
       },
       include: {
         images: { orderBy: { sortOrder: "asc" } },

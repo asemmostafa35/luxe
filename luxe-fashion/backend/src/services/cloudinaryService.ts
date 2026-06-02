@@ -5,7 +5,8 @@ import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { v2 as cloudinary } from "cloudinary";
-import { authenticate, requireAdmin } from "../middleware/auth";
+import { authenticate } from "../middleware/auth";
+import { requirePermission, requireStaff } from "../middleware/rbac";
 
 const router = Router();
 
@@ -92,7 +93,8 @@ async function uploadFile(buffer: Buffer): Promise<string> {
 router.post(
   "/",
   authenticate,
-  requireAdmin,
+  requireStaff,
+  requirePermission("products:write"),
   upload.array("images", 10),
   async (req: any, res, next) => {
     try {
