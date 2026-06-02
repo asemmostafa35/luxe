@@ -1,0 +1,17 @@
+{
+  "name": "luxe-fashion-backend",
+  "version": "1.0.0",
+  "description": "Luxe Fashion E-Commerce Backend API",
+  "main": "dist/server.js",
+  "scripts": {
+    "test": "jest --runInBand --forceExit",
+    "test:unit": "cross-env NODE_ENV=test jest --runInBand --forceExit --testPathPattern=unit",
+    "test:integration": "cross-env NODE_ENV=test jest --runInBand --forceExit --testPathPattern=integration",
+    "test:e2e": "cross-env NODE_ENV=test jest --runInBand --forceExit --testPathPattern=e2e",
+    "test:coverage": "cross-env NODE_ENV=test jest --runInBand --forceExit --coverage",
+    "test:watch": "cross-env NODE_ENV=test jest --watch"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
+  }
+}
