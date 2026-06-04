@@ -12,6 +12,7 @@ enum Role {
   USER
   VIEWER
   EDITOR
+  ORDER_MANAGER
   ADMIN
   SUPER_ADMIN
 }
@@ -121,6 +122,7 @@ model Product {
   price         Decimal   @db.Decimal(10,2)
   comparePrice  Decimal?  @db.Decimal(10,2)
   cost          Decimal?  @db.Decimal(10,2)
+  costPrice     Decimal?  @db.Decimal(10,2)
   sku           String    @unique
   barcode       String?
   categoryId    String
@@ -164,6 +166,7 @@ model ProductImage {
   alt       String?
   isPrimary Boolean  @default(false)
   sortOrder Int      @default(0)
+  colorHex  String?
   createdAt DateTime @default(now())
 
   @@map("product_images")
@@ -314,7 +317,7 @@ model Coupon {
   id              String    @id @default(cuid())
   code            String    @unique
   description     String?
-  discountType    String    // PERCENTAGE or FIXED
+  discountType    String
   discountValue   Decimal   @db.Decimal(10,2)
   minOrderAmount  Decimal?  @db.Decimal(10,2)
   maxDiscount     Decimal?  @db.Decimal(10,2)
@@ -389,7 +392,7 @@ model Banner {
 model Announcement {
   id          String   @id @default(cuid())
   message     String
-  type        String   @default("info") // info, warning, success, error
+  type        String   @default("info")
   isActive    Boolean  @default(true)
   link        String?
   linkText    String?
