@@ -1,6 +1,6 @@
 import { Role } from "@prisma/client";
 
-export type StaffRole = "SUPER_ADMIN" | "ADMIN" | "EDITOR" | "VIEWER";
+export type StaffRole = "SUPER_ADMIN" | "ADMIN" | "EDITOR" | "ORDER_MANAGER" | "VIEWER";
 
 export type Permission =
   | "dashboard:read"
@@ -30,14 +30,15 @@ export const STAFF_ROLES: StaffRole[] = [
   "SUPER_ADMIN",
   "ADMIN",
   "EDITOR",
+  "ORDER_MANAGER",
   "VIEWER",
 ];
 
-/** Higher number = more privilege. Used for role assignment hierarchy. */
 export const ROLE_LEVEL: Record<Role, number> = {
   USER: 1,
   VIEWER: 2,
   EDITOR: 3,
+  ORDER_MANAGER: 3,
   ADMIN: 4,
   SUPER_ADMIN: 5,
 };
@@ -51,6 +52,11 @@ export function isStaffRole(role: string): role is StaffRole {
 export function isValidRole(role: string): role is Role {
   return ALL_ROLES.includes(role as Role);
 }
+
+const ORDER_MANAGER_PERMISSIONS: Permission[] = [
+  "orders:read",
+  "orders:write",
+];
 
 const EDITOR_PERMISSIONS: Permission[] = [
   "dashboard:read",
@@ -84,6 +90,7 @@ const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   USER: [],
   VIEWER: ["analytics:read"],
   EDITOR: EDITOR_PERMISSIONS,
+  ORDER_MANAGER: ORDER_MANAGER_PERMISSIONS,
   ADMIN: ADMIN_PERMISSIONS,
   SUPER_ADMIN: [...ADMIN_PERMISSIONS, "roles:assign_elevated"],
 };
@@ -100,10 +107,11 @@ export function canAccessAdminRoute(role: string, pathname: string): boolean {
   if (!isStaffRole(role)) return false;
 
   if (role === "VIEWER") {
-    return (
-      pathname === "/admin/analytics" ||
-      pathname.startsWith("/admin/analytics/")
-    );
+    return pathname === "/admin/analytics" || pathname.startsWith("/admin/analytics/");
+  }
+
+  if (role === "ORDER_MANAGER") {
+    return pathname === "/admin/orders" || pathname.startsWith("/admin/orders/");
   }
 
   const routePermission: Record<string, Permission> = {
@@ -135,6 +143,7 @@ export function canAccessAdminRoute(role: string, pathname: string): boolean {
 
 export function getDefaultAdminLanding(role: string): string {
   if (role === "VIEWER") return "/admin/analytics";
+  if (role === "ORDER_MANAGER") return "/admin/orders";
   return "/admin";
 }
 
@@ -152,10 +161,7 @@ export function canAssignRole(
   }
 
   if (!hasPermission(actorRole, "roles:assign")) {
-    return {
-      allowed: false,
-      reason: "Insufficient permissions to change roles",
-    };
+    return { allowed: false, reason: "Insufficient permissions to change roles" };
   }
 
   const actorLevel = ROLE_LEVEL[actorRole as Role] ?? 0;
@@ -163,33 +169,20 @@ export function canAssignRole(
   const targetLevel = ROLE_LEVEL[targetCurrentRole as Role] ?? 0;
 
   if (newLevel >= actorLevel) {
-    return {
-      allowed: false,
-      reason: "You cannot assign a role at or above your own level",
-    };
+    return { allowed: false, reason: "You cannot assign a role at or above your own level" };
   }
 
   if (targetLevel >= actorLevel) {
-    return {
-      allowed: false,
-      reason: "You cannot modify users at or above your own level",
-    };
+    return { allowed: false, reason: "You cannot modify users at or above your own level" };
   }
 
   return { allowed: true };
 }
 
-export function assignableRolesForActor(
-  actorRole: string,
-  targetRole: string,
-): Role[] {
-  if (actorRole === "SUPER_ADMIN") {
-    return ALL_ROLES;
-  }
+export function assignableRolesForActor(actorRole: string, targetRole: string): Role[] {
+  if (actorRole === "SUPER_ADMIN") return ALL_ROLES;
 
-  if (!hasPermission(actorRole, "roles:assign")) {
-    return [];
-  }
+  if (!hasPermission(actorRole, "roles:assign")) return [];
 
   const actorLevel = ROLE_LEVEL[actorRole as Role] ?? 0;
   const allowed = ALL_ROLES.filter((r) => ROLE_LEVEL[r] < actorLevel);
