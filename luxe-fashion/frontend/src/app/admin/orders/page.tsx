@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ordersApi } from '@/lib/api';
 import { AdminPageHeader, DataTable, StatusBadge, Pagination, Modal, SearchInput } from '@/components/admin/AdminUI';
-import { Eye, Truck } from 'lucide-react';
+import { Eye, Truck, Phone } from 'lucide-react';
 import { AdminTableThumb } from '@/components/admin/AdminTableThumb';
 import toast from 'react-hot-toast';
 import { formatEGP } from '@/lib/currency';
@@ -42,68 +42,84 @@ export default function AdminOrdersPage() {
   const orders = data?.data?.orders || [];
   const pagination = data?.data?.pagination;
 
+  const getPhone = (r: any) =>
+    r.user?.phone || r.guestPhone || r.address?.phone || null;
+
   const columns = [
     {
-      key: 'thumb',
-      label: '',
-      className: 'w-14 admin-table-cell',
+      key: 'thumb', label: '', className: 'w-14 admin-table-cell',
+      render: (r: any) => <AdminTableThumb items={r.items} alt={r.items?.[0]?.name} />,
+    },
+    {
+      key: 'orderNumber', label: 'Order #',
       render: (r: any) => (
-        <AdminTableThumb items={r.items} alt={r.items?.[0]?.name} />
+        <span className="font-mono text-xs font-medium" style={{ color: 'var(--admin-fg)' }}>{r.orderNumber}</span>
       ),
     },
-    { key: 'orderNumber', label: 'Order #', render: (r: any) => (
-      <span className="font-mono text-xs font-medium" style={{ color: 'var(--admin-fg)' }}>{r.orderNumber}</span>
-    )},
-    { key: 'customer', label: 'Customer', render: (r: any) => (
-      <div>
-        <p className="text-sm" style={{ color: 'var(--admin-fg)' }}>
-          {r.user ? `${r.user.firstName} ${r.user.lastName}` : r.guestName || '—'}
-        </p>
-        <p className="text-xs admin-muted">{r.user?.email || r.guestEmail}</p>
-      </div>
-    )},
-    { key: 'items', label: 'Items', render: (r: any) => (
-      <span>{r.items?.length || 0} item{r.items?.length !== 1 ? 's' : ''}</span>
-    )},
-    { key: 'total', label: 'Total', render: (r: any) => (
-      <span className="font-medium" style={{ color: 'var(--admin-fg)' }}>{formatEGP(Number(r.total))}</span>
-    )},
-    { key: 'paymentMethod', label: 'Payment', render: (r: any) => (
-      <span className="text-xs">{r.paymentMethod?.replace(/_/g, ' ')}</span>
-    )},
+    {
+      key: 'customer', label: 'Customer',
+      render: (r: any) => {
+        const phone = getPhone(r);
+        return (
+          <div>
+            <p className="text-sm" style={{ color: 'var(--admin-fg)' }}>
+              {r.user ? `${r.user.firstName} ${r.user.lastName}` : r.guestName || '—'}
+            </p>
+            <p className="text-xs admin-muted">{r.user?.email || r.guestEmail}</p>
+            {phone && (
+              <a href={`tel:${phone}`}
+                className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1 mt-0.5 hover:underline">
+                <Phone size={10} /> {phone}
+              </a>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'items', label: 'Items',
+      render: (r: any) => <span>{r.items?.length || 0} item{r.items?.length !== 1 ? 's' : ''}</span>,
+    },
+    {
+      key: 'total', label: 'Total',
+      render: (r: any) => (
+        <span className="font-medium" style={{ color: 'var(--admin-fg)' }}>{formatEGP(Number(r.total))}</span>
+      ),
+    },
+    {
+      key: 'paymentMethod', label: 'Payment',
+      render: (r: any) => <span className="text-xs">{r.paymentMethod?.replace(/_/g, ' ')}</span>,
+    },
     { key: 'status', label: 'Status', render: (r: any) => <StatusBadge status={r.status} /> },
-    { key: 'createdAt', label: 'Date', render: (r: any) => (
-      <span>{new Date(r.createdAt).toLocaleDateString()}</span>
-    )},
-    { key: 'actions', label: '', className: 'w-24', render: (r: any) => (
-      <div className="flex items-center gap-1.5 justify-end">
-        <button
-          type="button"
-          title="View order"
-          onClick={() => { setSelectedOrder(r); setUpdatingStatus(false); setStatusForm({ status: r.status, note: '', trackingNumber: r.trackingNumber || '', shippingCarrier: r.shippingCarrier || '' }); }}
-          className="admin-icon-btn"
-        >
-          <Eye size={14} strokeWidth={1.5} />
-        </button>
-        {canWriteOrders && (
-        <button
-          type="button"
-          title="Update status"
-          onClick={() => { setSelectedOrder(r); setUpdatingStatus(true); setStatusForm({ status: r.status, note: '', trackingNumber: r.trackingNumber || '', shippingCarrier: r.shippingCarrier || '' }); }}
-          className="admin-icon-btn"
-        >
-          <Truck size={14} strokeWidth={1.5} />
-        </button>
-        )}
-      </div>
-    )},
+    {
+      key: 'createdAt', label: 'Date',
+      render: (r: any) => <span>{new Date(r.createdAt).toLocaleDateString()}</span>,
+    },
+    {
+      key: 'actions', label: '', className: 'w-24',
+      render: (r: any) => (
+        <div className="flex items-center gap-1.5 justify-end">
+          <button type="button" title="View order"
+            onClick={() => { setSelectedOrder(r); setUpdatingStatus(false); setStatusForm({ status: r.status, note: '', trackingNumber: r.trackingNumber || '', shippingCarrier: r.shippingCarrier || '' }); }}
+            className="admin-icon-btn">
+            <Eye size={14} strokeWidth={1.5} />
+          </button>
+          {canWriteOrders && (
+            <button type="button" title="Update status"
+              onClick={() => { setSelectedOrder(r); setUpdatingStatus(true); setStatusForm({ status: r.status, note: '', trackingNumber: r.trackingNumber || '', shippingCarrier: r.shippingCarrier || '' }); }}
+              className="admin-icon-btn">
+              <Truck size={14} strokeWidth={1.5} />
+            </button>
+          )}
+        </div>
+      ),
+    },
   ];
 
   return (
     <div>
       <AdminPageHeader title="Orders" subtitle={`${pagination?.total || 0} total orders`} />
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-5">
         <SearchInput value={search} onChange={v => { setSearch(v); setPage(1); }} placeholder="Search by order # or email..." />
         <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
@@ -116,30 +132,39 @@ export default function AdminOrdersPage() {
       <DataTable columns={columns} data={orders} loading={isLoading} emptyText="No orders found" />
       <Pagination page={page} pages={pagination?.pages || 1} onChange={setPage} />
 
-      {/* Order detail / status update modal */}
       <Modal open={!!selectedOrder} onClose={() => { setSelectedOrder(null); setUpdatingStatus(false); }}
         title={updatingStatus ? `Update Order ${selectedOrder?.orderNumber}` : `Order ${selectedOrder?.orderNumber}`}
         size="lg">
         {selectedOrder && (
           <div className="space-y-5">
-            {/* Order info */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-              <div><p className="admin-muted text-xs mb-1 uppercase tracking-wider">Customer</p>
+              <div>
+                <p className="admin-muted text-xs mb-1 uppercase tracking-wider">Customer</p>
                 <p className="font-medium" style={{ color: 'var(--admin-fg)' }}>
-                  {selectedOrder.user ? `${selectedOrder.user.firstName} ${selectedOrder.user.lastName}` : selectedOrder.guestName}
+                  {selectedOrder.user ? `${selectedOrder.user.firstName} ${selectedOrder.user.lastName}` : selectedOrder.guestName || '—'}
                 </p>
                 <p className="admin-muted text-xs">{selectedOrder.user?.email || selectedOrder.guestEmail}</p>
+                {getPhone(selectedOrder) && (
+                  <a href={`tel:${getPhone(selectedOrder)}`}
+                    className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-1 mt-1 hover:underline font-medium">
+                    <Phone size={13} /> {getPhone(selectedOrder)}
+                  </a>
+                )}
               </div>
-              <div><p className="admin-muted text-xs mb-1 uppercase tracking-wider">Total</p>
+              <div>
+                <p className="admin-muted text-xs mb-1 uppercase tracking-wider">Total</p>
                 <p className="font-medium text-lg" style={{ color: 'var(--admin-fg)' }}>{formatEGP(Number(selectedOrder.total))}</p>
+                {Number(selectedOrder.shipping) > 0 && (
+                  <p className="text-xs admin-muted">incl. {formatEGP(Number(selectedOrder.shipping))} shipping</p>
+                )}
               </div>
-              <div><p className="admin-muted text-xs mb-1 uppercase tracking-wider">Payment</p>
-                <p style={{ color: 'var(--admin-fg)' }}>{selectedOrder.paymentMethod?.replace(/_/g,' ')}</p>
+              <div>
+                <p className="admin-muted text-xs mb-1 uppercase tracking-wider">Payment</p>
+                <p style={{ color: 'var(--admin-fg)' }}>{selectedOrder.paymentMethod?.replace(/_/g, ' ')}</p>
                 <StatusBadge status={selectedOrder.paymentStatus || 'PENDING'} />
               </div>
             </div>
 
-            {/* Items */}
             <div>
               <p className="text-xs tracking-widest uppercase admin-muted mb-3">Items</p>
               <div className="space-y-2">
@@ -148,7 +173,9 @@ export default function AdminOrdersPage() {
                     <AdminTableThumb items={[{ image: item.image, name: item.name }]} alt={item.name} />
                     <div className="flex-1">
                       <p className="text-sm" style={{ color: 'var(--admin-fg)' }}>{item.name}</p>
-                      {(item.size || item.color) && <p className="text-xs admin-muted">{[item.size, item.color].filter(Boolean).join(' · ')}</p>}
+                      {(item.size || item.color) && (
+                        <p className="text-xs admin-muted">{[item.size, item.color].filter(Boolean).join(' · ')}</p>
+                      )}
                     </div>
                     <p className="text-sm admin-muted">×{item.quantity}</p>
                     <p className="text-sm font-medium" style={{ color: 'var(--admin-fg)' }}>{formatEGP(Number(item.total))}</p>
@@ -157,7 +184,6 @@ export default function AdminOrdersPage() {
               </div>
             </div>
 
-            {/* Shipping address */}
             {selectedOrder.address && (
               <div>
                 <p className="text-xs tracking-widest uppercase admin-muted mb-2">Ship To</p>
@@ -167,36 +193,39 @@ export default function AdminOrdersPage() {
                   {selectedOrder.address.city}, {selectedOrder.address.state} {selectedOrder.address.postalCode}<br />
                   {selectedOrder.address.country}
                 </p>
+                {selectedOrder.address.phone && (
+                  <a href={`tel:${selectedOrder.address.phone}`}
+                    className="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-1 mt-2 hover:underline">
+                    <Phone size={13} /> {selectedOrder.address.phone}
+                  </a>
+                )}
               </div>
             )}
 
             {canWriteOrders && (
-            <div className="border-t pt-4" style={{ borderColor: 'var(--admin-border)' }}>
-              <p className="text-xs tracking-widest uppercase admin-muted mb-3">Update Status</p>
-              <div className="space-y-3">
-                <select value={statusForm.status} onChange={e => setStatusForm(p => ({ ...p, status: e.target.value }))}
-                  className="admin-input text-sm">
-                  {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                {statusForm.status === 'SHIPPED' && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <input value={statusForm.trackingNumber} onChange={e => setStatusForm(p => ({ ...p, trackingNumber: e.target.value }))}
-                      placeholder="Tracking Number" className="admin-input text-sm" />
-                    <input value={statusForm.shippingCarrier} onChange={e => setStatusForm(p => ({ ...p, shippingCarrier: e.target.value }))}
-                      placeholder="Carrier (e.g. FedEx)" className="admin-input text-sm" />
-                  </div>
-                )}
-                <textarea value={statusForm.note} onChange={e => setStatusForm(p => ({ ...p, note: e.target.value }))}
-                  placeholder="Note (optional)..." rows={2}
-                  className="admin-input text-sm resize-none" />
-                <button
-                  onClick={() => updateMutation.mutate({ id: selectedOrder.id, data: statusForm })}
-                  disabled={updateMutation.isPending}
-                  className="admin-btn-primary text-xs w-full sm:w-auto">
-                  {updateMutation.isPending ? 'Updating...' : 'Update Status'}
-                </button>
+              <div className="border-t pt-4" style={{ borderColor: 'var(--admin-border)' }}>
+                <p className="text-xs tracking-widest uppercase admin-muted mb-3">Update Status</p>
+                <div className="space-y-3">
+                  <select value={statusForm.status} onChange={e => setStatusForm(p => ({ ...p, status: e.target.value }))}
+                    className="admin-input text-sm">
+                    {ORDER_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  {statusForm.status === 'SHIPPED' && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <input value={statusForm.trackingNumber} onChange={e => setStatusForm(p => ({ ...p, trackingNumber: e.target.value }))}
+                        placeholder="Tracking Number" className="admin-input text-sm" />
+                      <input value={statusForm.shippingCarrier} onChange={e => setStatusForm(p => ({ ...p, shippingCarrier: e.target.value }))}
+                        placeholder="Carrier (e.g. FedEx)" className="admin-input text-sm" />
+                    </div>
+                  )}
+                  <textarea value={statusForm.note} onChange={e => setStatusForm(p => ({ ...p, note: e.target.value }))}
+                    placeholder="Note (optional)..." rows={2} className="admin-input text-sm resize-none" />
+                  <button onClick={() => updateMutation.mutate({ id: selectedOrder.id, data: statusForm })}
+                    disabled={updateMutation.isPending} className="admin-btn-primary text-xs w-full sm:w-auto">
+                    {updateMutation.isPending ? 'Updating...' : 'Update Status'}
+                  </button>
+                </div>
               </div>
-            </div>
             )}
           </div>
         )}
