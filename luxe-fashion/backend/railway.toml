@@ -3,7 +3,7 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-preDeployCommand = "npx prisma migrate deploy"
+preDeployCommand = "npx prisma db push --accept-data-loss"
 startCommand = "node dist/server.js"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
